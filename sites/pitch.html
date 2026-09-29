@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AgriNexus: One Platform. Your Entire Farm.</title>
+<meta name="description" content="AgriNexus is an AI farm platform for India's smallholders: crop planning, photo diagnosis, farmer network and market linkage, free for farmers and paid by the value chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#fff; --ink-2:rgba(255,255,255,.9); --ink-3:rgba(255,255,255,.8); --ink-4:rgba(255,255,255,.6);
+  --heading:'Instrument Serif',Georgia,serif; --body:'Barlow',system-ui,sans-serif;
+  --leaf:#9FD45A; --wheat:#F0C069;
+  color-scheme:dark; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --ink:#fff; } }
+:root[data-theme="dark"]{ --ink:#fff; }
+*,*::before,*::after{ box-sizing:inherit; }
+html{ scroll-padding-top:env(safe-area-inset-top,0px); background:#000; }
+html.pitch{ scroll-snap-type:y mandatory; }
+body{ margin:0; background:#000; color:var(--ink); font-family:var(--body); font-weight:300; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+a{ color:inherit; text-decoration:none; }
+button{ font:inherit; color:inherit; background:none; border:none; cursor:pointer; }
+:focus-visible{ outline:2px solid var(--wheat); outline-offset:3px; border-radius:999px; }
+
+/* ---------- GPU field background ---------- */
+#field{ position:fixed; inset:0; width:100%; height:100%; z-index:0; display:block; }
+.no-gl #field{ display:none; }
+.no-gl body{ background:radial-gradient(90% 60% at 60% 40%, #3a2410 0%, #0b0703 55%, #000 100%) fixed; }
+.shade{ position:fixed; inset:0; z-index:1; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 60%, rgba(0,0,0,.55) 100%); }
+
+/* ---------- liquid glass (per brief) ---------- */
+.liquid-glass{ background:rgba(255,255,255,.01); background-blend-mode:luminosity; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); border:none; box-shadow:inset 0 1px 1px rgba(255,255,255,.1); position:relative; overflow:hidden; }
+.liquid-glass::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1.4px;
+  background:linear-gradient(180deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,.15) 20%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,.15) 80%, rgba(255,255,255,.45) 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; }
+.liquid-glass-strong{ background:rgba(255,255,255,.01); background-blend-mode:luminosity; -webkit-backdrop-filter:blur(50px); backdrop-filter:blur(50px); border:none; box-shadow:4px 4px 4px rgba(0,0,0,.05), inset 0 1px 1px rgba(255,255,255,.15); position:relative; overflow:hidden; }
+.liquid-glass-strong::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1.4px;
+  background:linear-gradient(180deg, rgba(255,255,255,.5) 0%, rgba(255,255,255,.2) 20%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,.2) 80%, rgba(255,255,255,.5) 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; }
+.glass-fill{ background:rgba(0,0,0,.28); }
+
+/* ---------- type ---------- */
+.h-hero{ font-family:var(--heading); font-style:italic; font-weight:400; font-size:clamp(3.4rem,8.4vw,5.5rem); line-height:.8; letter-spacing:-4px; margin:0; }
+.h-sec{ font-family:var(--heading); font-style:italic; font-weight:400; font-size:clamp(3.2rem,8vw,6rem); line-height:.9; letter-spacing:-3px; margin:0; max-width:11.5em; }
+.h-card{ font-family:var(--heading); font-style:italic; font-weight:400; font-size:clamp(1.9rem,3.2vw,2.4rem); line-height:1; letter-spacing:-1px; margin:0; }
+.num{ font-family:var(--heading); font-style:italic; font-size:2.4rem; letter-spacing:-1px; line-height:1; }
+.label{ font-size:.875rem; color:var(--ink-3); margin:0 0 1.5rem; }
+.body{ font-size:.95rem; line-height:1.4; color:var(--ink-2); font-weight:300; }
+
+/* ---------- blur-in (BlurText behaviour) ---------- */
+.blur{ display:flex; flex-wrap:wrap; row-gap:.1em; }
+.blur.center{ justify-content:center; }
+.blur .w{ display:inline-block; margin-right:.28em; filter:blur(10px); opacity:0; transform:translateY(50px); transition:filter .7s ease-out, opacity .7s ease-out, transform .7s ease-out; }
+.blur.in .w{ filter:blur(0); opacity:1; transform:none; }
+.rise{ filter:blur(10px); opacity:0; transform:translateY(20px); transition:filter .8s ease-out, opacity .8s ease-out, transform .8s ease-out; transition-delay:var(--d,0s); }
+.loaded .rise, .rise.in{ filter:blur(0); opacity:1; transform:none; }
+
+/* ---------- nav ---------- */
+.nav{ position:fixed; top:calc(env(safe-area-inset-top,0px) + 16px); left:0; right:0; z-index:50; display:flex; align-items:center; justify-content:space-between; padding:0 2rem; pointer-events:none; }
+.nav > *{ pointer-events:auto; }
+.circle{ width:48px; height:48px; border-radius:50%; display:grid; place-items:center; }
+.circle .a{ font-family:var(--heading); font-style:italic; font-size:1.5rem; }
+.pill-nav{ display:flex; align-items:center; gap:.1rem; padding:6px; border-radius:999px; }
+.pill-nav a{ padding:.5rem .75rem; font-size:.875rem; font-weight:500; color:var(--ink-2); border-radius:999px; }
+.pill-nav a:hover{ background:rgba(255,255,255,.06); }
+.cta-white{ display:inline-flex; align-items:center; gap:.4rem; background:#fff; color:#000 !important; font-weight:500; font-size:.875rem; padding:.55rem 1rem; border-radius:999px; margin-left:.25rem; }
+.cta-white svg{ width:14px; height:14px; }
+@media (min-width:1024px){ .nav{ padding:0 4rem; } }
+@media (max-width:860px){ .pill-nav{ display:none; } }
+
+/* ---------- sections ---------- */
+main{ position:relative; z-index:2; }
+section{ position:relative; min-height:100vh; min-height:100svh; scroll-snap-align:start; }
+.pad{ padding:6rem 2rem 2.5rem; }
+@media (min-width:768px){ .pad{ padding:6rem 4rem 2.5rem; } }
+@media (min-width:1024px){ .pad{ padding:6rem 5rem 2.5rem; } }
+.hero{ height:100vh; height:100svh; min-height:640px; display:flex; flex-direction:column; }
+.hero-main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:6rem 1rem 0; }
+.badge{ display:inline-flex; align-items:center; gap:.6rem; padding:6px 16px 6px 6px; border-radius:999px; font-size:.85rem; color:var(--ink-2); }
+.badge b{ background:#fff; color:#000; font-weight:600; font-size:.72rem; padding:.28rem .6rem; border-radius:999px; }
+.hero .h-hero{ margin-top:1.5rem; max-width:48rem; }
+.hero .sub{ text-shadow:0 1px 14px rgba(0,0,0,.75), 0 0 2px rgba(0,0,0,.5); margin:1rem auto 0; max-width:42rem; font-size:clamp(.875rem,1.4vw,1rem); line-height:1.25; color:#fff; font-weight:300; }
+.ctas{ margin-top:1.5rem; display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; justify-content:center; }
+.btn-glass{ display:inline-flex; align-items:center; gap:.5rem; padding:.65rem 1.25rem; border-radius:999px; font-size:.9rem; font-weight:500; }
+.btn-glass svg, .btn-plain svg{ width:16px; height:16px; }
+.btn-plain{ display:inline-flex; align-items:center; gap:.5rem; font-size:.9rem; font-weight:500; color:var(--ink-2); }
+.stats{ margin-top:2rem; display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; }
+.stat{ width:220px; padding:1.25rem; border-radius:1.25rem; text-align:left; }
+.stat svg{ width:22px; height:22px; color:var(--ink-3); }
+.stat .num{ margin-top:1rem; }
+.stat p{ margin:.5rem 0 0; font-size:.8rem; line-height:1.3; color:var(--ink-3); }
+.trust{ display:flex; flex-direction:column; align-items:center; gap:1rem; padding:0 1rem 2rem; }
+.trust .pill{ padding:.45rem 1rem; border-radius:999px; font-size:.8rem; color:var(--ink-3); }
+.names{ display:flex; flex-wrap:wrap; justify-content:center; gap:.4rem 3rem; }
+.names span{ font-family:var(--heading); font-style:italic; font-size:clamp(1.4rem,2.6vw,1.9rem); letter-spacing:-.5px; color:rgba(255,255,255,.88); }
+@media (max-height:760px) and (min-width:761px){ .stats{ display:none; } }
+@media (max-width:760px){
+  .hero{ height:auto; min-height:100svh; }
+  .hero-main{ padding-top:5.5rem; }
+  .stats{ flex-wrap:nowrap; gap:.6rem; width:100%; max-width:26rem; }
+  .stat{ width:auto; flex:1; padding:1rem; }
+  .stat .num{ font-size:2rem; margin-top:.6rem; }
+  .names{ gap:.3rem 1.6rem; }
+  .h-sec{ letter-spacing:-2px; }
+  .brand{ letter-spacing:-3px; }
+}
+
+/* cards */
+.flexcol{ display:flex; flex-direction:column; min-height:100vh; min-height:100svh; }
+.grid3{ margin-top:4rem; display:grid; grid-template-columns:1fr; gap:1.5rem; }
+@media (min-width:768px){ .grid3{ grid-template-columns:repeat(3,1fr); } }
+.cap{ border-radius:1.25rem; padding:1.5rem; min-height:360px; display:flex; flex-direction:column; }
+.cap-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:.8rem; }
+.ico{ width:44px; height:44px; border-radius:.75rem; display:grid; place-items:center; flex:none; }
+.ico svg{ width:22px; height:22px; }
+.tags{ display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; }
+.tag{ padding:.25rem .75rem; border-radius:999px; font-size:11px; color:var(--ink-2); white-space:nowrap; }
+.cap .grow{ flex:1; min-height:2rem; }
+.cap .body{ margin:.8rem 0 0; max-width:32ch; }
+
+/* bento */
+.bento{ margin-top:3.5rem; display:grid; grid-template-columns:repeat(12,1fr); gap:1rem; }
+.bx{ grid-column:span 12; border-radius:1.25rem; padding:1.4rem; display:flex; flex-direction:column; gap:.7rem; min-height:220px; }
+@media (min-width:900px){
+  .s7{ grid-column:span 7; } .s5{ grid-column:span 5; } .s4{ grid-column:span 4; } .s6{ grid-column:span 6; }
+}
+.bx .row{ display:flex; justify-content:space-between; align-items:center; gap:.8rem; }
+.status{ font-size:11px; padding:.22rem .7rem; border-radius:999px; white-space:nowrap; }
+.status.live::after{ content:""; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--leaf); margin-left:.45rem; vertical-align:middle; box-shadow:0 0 8px var(--leaf); }
+.bx .body{ margin:0; }
+.bx .grow{ flex:1; }
+.bx .h-card{ font-size:clamp(1.6rem,2.6vw,2.1rem); }
+
+/* mini simulator */
+.sim{ display:grid; gap:1rem; margin-top:.4rem; }
+.sim-ctl{ display:grid; grid-template-columns:1fr; gap:.8rem; }
+@media (min-width:560px){ .sim-ctl{ grid-template-columns:repeat(3,1fr); } }
+.sim label{ display:flex; justify-content:space-between; font-size:.8rem; color:var(--ink-3); margin-bottom:.3rem; }
+.sim label output{ color:#fff; font-weight:500; font-variant-numeric:tabular-nums; }
+input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:24px; background:transparent; cursor:pointer; }
+input[type=range]::-webkit-slider-runnable-track{ height:3px; border-radius:3px; background:linear-gradient(90deg,#fff 0 var(--p,50%), rgba(255,255,255,.18) var(--p,50%) 100%); }
+input[type=range]::-moz-range-track{ height:3px; border-radius:3px; background:rgba(255,255,255,.18); }
+input[type=range]::-moz-range-progress{ height:3px; background:#fff; }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; margin-top:-6.5px; border-radius:50%; background:#fff; box-shadow:0 0 0 5px rgba(255,255,255,.12); }
+input[type=range]::-moz-range-thumb{ width:16px; height:16px; border:none; border-radius:50%; background:#fff; }
+.bars{ display:grid; gap:.55rem; }
+.bar{ display:grid; grid-template-columns:5.5rem 1fr 5.5rem; gap:.7rem; align-items:center; font-size:.85rem; }
+.bar i{ height:6px; border-radius:6px; background:rgba(255,255,255,.1); overflow:hidden; display:block; }
+.bar i span{ display:block; height:100%; width:0; background:rgba(255,255,255,.55); border-radius:6px; transition:width .6s cubic-bezier(.2,.8,.2,1); }
+.bar.best i span{ background:var(--leaf); }
+.bar em{ font-style:normal; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-2); }
+.bar.best em, .bar.best b{ color:var(--leaf); }
+.bar b{ font-weight:500; }
+.verdict{ font-family:var(--heading); font-style:italic; font-size:1.5rem; line-height:1.1; letter-spacing:-.5px; }
+
+/* business */
+.market{ margin-top:3rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; }
+.mk{ padding:1.3rem; border-radius:1.25rem; }
+.mk .num{ font-size:2.8rem; }
+.mk p{ margin:.5rem 0 0; font-size:.85rem; color:var(--ink-3); line-height:1.35; }
+.src{ font-size:.75rem; color:var(--ink-4); margin:.9rem 0 0; }
+.rev{ margin-top:1.2rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1rem; }
+.rv{ padding:1.3rem; border-radius:1.25rem; display:flex; flex-direction:column; gap:.55rem; min-height:210px; }
+.rv .who{ font-size:.78rem; color:var(--ink-3); }
+.rv .price{ margin-top:auto; font-family:var(--heading); font-style:italic; font-size:1.6rem; letter-spacing:-.5px; }
+.rv .price small{ font-family:var(--body); font-style:normal; font-size:.75rem; color:var(--ink-3); letter-spacing:0; }
+.unit{ margin-top:1.2rem; padding:1.4rem; border-radius:1.25rem; display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); align-items:end; }
+.unit h3{ grid-column:1/-1; margin:0; }
+
+/* roadmap */
+.steps{ margin-top:3.5rem; display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); }
+.step{ padding:1.4rem; border-radius:1.25rem; min-height:260px; display:flex; flex-direction:column; gap:.6rem; }
+.step .when{ font-size:.8rem; color:var(--ink-3); }
+.step .n{ font-family:var(--heading); font-style:italic; font-size:3.2rem; line-height:.8; color:rgba(255,255,255,.35); }
+.step ul{ margin:.2rem 0 0; padding-left:1rem; font-size:.88rem; line-height:1.45; color:var(--ink-2); }
+.step .goal{ margin-top:auto; font-size:.82rem; color:var(--leaf); }
+
+/* why it wins */
+.crit{ margin-top:3.2rem; display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); }
+.cr{ padding:1.3rem; border-radius:1.25rem; min-height:200px; display:flex; flex-direction:column; gap:.6rem; }
+.risks{ margin-top:1.2rem; padding:1.4rem; border-radius:1.25rem; }
+.risks table{ width:100%; border-collapse:collapse; font-size:.9rem; }
+.risks th{ text-align:left; font-weight:500; color:var(--ink-3); font-size:.78rem; padding:0 .8rem .6rem 0; }
+.risks td{ padding:.75rem .8rem .75rem 0; border-top:1px solid rgba(255,255,255,.1); vertical-align:top; color:var(--ink-2); line-height:1.4; }
+.risks td:first-child{ color:#fff; font-weight:500; width:28%; }
+.tblwrap{ overflow-x:auto; }
+
+/* final */
+.final{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:6rem 1.5rem 3rem; }
+.brand{ font-family:var(--heading); font-style:italic; font-size:clamp(4.4rem,15vw,13rem); line-height:.8; letter-spacing:-6px; margin:0; }
+.tagline{ font-family:var(--heading); font-style:italic; font-size:clamp(1.6rem,3.4vw,2.6rem); letter-spacing:-1px; margin:1.4rem 0 .4rem; }
+.final .sub2{ color:var(--ink-3); font-size:1.05rem; margin:0 0 2rem; }
+.links{ margin-top:2.4rem; display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); width:min(56rem,100%); text-align:left; }
+.lk{ padding:1.2rem 1.3rem; border-radius:1.25rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+.lk b{ display:block; font-weight:500; }
+.lk span{ font-size:.82rem; color:var(--ink-3); }
+.lk svg{ width:18px; height:18px; flex:none; }
+.foot{ margin-top:3rem; font-size:.75rem; color:var(--ink-4); }
+
+/* pitch mode */
+.pitch-hud{ position:fixed; right:1.2rem; bottom:calc(env(safe-area-inset-bottom,0px) + 1.2rem); z-index:60; display:none; align-items:center; gap:.4rem; padding:6px; border-radius:999px; font-size:.82rem; }
+html.pitch .pitch-hud{ display:flex; }
+.pitch-hud button{ width:34px; height:34px; border-radius:50%; display:grid; place-items:center; }
+.pitch-hud button:hover{ background:rgba(255,255,255,.08); }
+.pitch-hud span{ padding:0 .5rem; font-variant-numeric:tabular-nums; color:var(--ink-2); }
+.pitch-hud svg{ width:16px; height:16px; }
+.circle.pbtn svg{ width:20px; height:20px; }
+html.pitch .circle.pbtn{ background:rgba(255,255,255,.9); color:#000; }
+
+@media (prefers-reduced-motion: reduce){
+  .blur .w, .rise{ transition:none; filter:none; opacity:1; transform:none; }
+}
+
+.mini-nav{ display:none; align-items:center; gap:.2rem; padding:5px; border-radius:999px; }
+.mini-nav a{ font-size:.82rem; font-weight:500; padding:.45rem .8rem; border-radius:999px; color:var(--ink-2); }
+.mini-nav a.solid{ background:#fff; color:#000; }
+@media (max-width:860px){ .mini-nav{ display:flex; } }
+
+/* ---------- live demo dock ---------- */
+.pitch-hud{ background:rgba(0,0,0,.66); border:1px solid rgba(255,255,255,.22); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); box-shadow:0 14px 34px -14px rgba(0,0,0,.7); }
+.demo-dock{ background:rgba(0,0,0,.66); border:1px solid rgba(255,255,255,.22); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); box-shadow:0 14px 34px -14px rgba(0,0,0,.7); position:fixed; left:1.2rem; bottom:calc(env(safe-area-inset-bottom,0px) + 1.2rem); z-index:60; display:flex; align-items:center; gap:.2rem; padding:6px; border-radius:999px; }
+.demo-dock .lbl{ font-size:.78rem; color:var(--ink-3); padding:0 .55rem 0 .7rem; white-space:nowrap; display:flex; align-items:center; gap:.45rem; }
+.demo-dock .lbl::before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--leaf); box-shadow:0 0 8px var(--leaf); }
+.demo-dock a{ display:flex; align-items:center; gap:.4rem; padding:.45rem .75rem; border-radius:999px; font-size:.84rem; font-weight:500; color:var(--ink-2); white-space:nowrap; }
+.demo-dock a:hover{ background:rgba(255,255,255,.1); color:#fff; }
+.demo-dock a span{ font-size:1rem; }
+.demo-toggle{ display:none; }
+.demo-link{ align-self:flex-start; display:inline-flex; align-items:center; gap:.4rem; margin-top:.2rem; padding:.45rem .85rem; border-radius:999px; background:#fff; color:#000 !important; font-size:.82rem; font-weight:500; }
+.demo-link svg{ width:13px; height:13px; }
+.back-toast{ position:fixed; left:50%; top:calc(env(safe-area-inset-top,0px) + 84px); transform:translate(-50%,-10px); z-index:70; padding:.6rem 1.1rem; border-radius:999px; font-size:.85rem; opacity:0; pointer-events:none; transition:opacity .4s, transform .4s; }
+.back-toast.on{ opacity:1; transform:translate(-50%,0); }
+@media (max-width:980px){
+  .demo-dock{ flex-direction:column; align-items:stretch; border-radius:22px; padding:6px; }
+  .demo-dock a, .demo-dock .lbl{ display:none; }
+  .demo-dock.open a, .demo-dock.open .lbl{ display:flex; }
+  .demo-dock.open .lbl{ padding:.4rem .6rem; }
+  .demo-toggle{ display:flex; align-items:center; gap:.45rem; padding:.55rem .9rem; border-radius:999px; font-size:.85rem; font-weight:500; }
+  .demo-toggle::before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--leaf); box-shadow:0 0 8px var(--leaf); }
+}
+</style>
+</head>
+<body>
+<canvas id="field" aria-hidden="true"></canvas>
+<div class="shade"></div>
+
+<header class="nav">
+  <a class="liquid-glass circle" href="#top" aria-label="AgriNexus home"><span class="a">a</span></a>
+  <nav class="liquid-glass pill-nav" aria-label="Sections">
+    <a data-site="home" href="https://claude.ai/artifact/JVW3Gpqzek7UZuoNH1yUxT">Home</a><a href="#platform">Platform</a><a href="#ideas">Features</a><a href="#business">Business</a><a href="#plan">Roadmap</a><a href="#why">Why it wins</a>
+    <a data-site="app" class="cta-white" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63" target="_blank" rel="noopener">Open the App <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+  </nav>
+  <nav class="liquid-glass mini-nav" aria-label="AgriNexus sites"><a data-site="home" href="https://claude.ai/artifact/JVW3Gpqzek7UZuoNH1yUxT">Home</a><a data-site="app" class="solid" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63" target="_blank" rel="noopener">Farmer App</a></nav>
+  <button class="liquid-glass circle pbtn" id="pitchBtn" aria-pressed="false" title="Pitch mode (P)" aria-label="Toggle pitch mode">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+  </button>
+</header>
+
+<nav class="demo-dock" id="demoDock" aria-label="Live demo in the farmer app">
+  <button class="demo-toggle" id="demoToggle" aria-expanded="false">Live demo</button>
+  <span class="lbl">Live demo</span>
+  <a data-demo="plan" href="#"><span>🌾</span>Plan</a>
+  <a data-demo="journey" href="#"><span>🧭</span>Journey</a>
+  <a data-demo="doctor" href="#"><span>📷</span>Crop Doctor</a>
+  <a data-demo="ai" href="#"><span>🤖</span>Ask AI</a>
+  <a data-demo="network" href="#"><span>🗣️</span>Network</a>
+  <a data-demo="admin" href="#"><span>🛠</span>Admin</a>
+</nav>
+<div class="liquid-glass-strong back-toast" id="backToast" role="status">Welcome back to the pitch</div>
+<div class="pitch-hud" aria-label="Pitch controls">
+  <button id="prevSlide" aria-label="Previous slide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+  <span id="slideNo">1 / 7</span>
+  <button id="nextSlide" aria-label="Next slide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+  <button id="exitPitch" aria-label="Exit pitch mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</div>
+
+<main>
+<!-- ================= HERO ================= -->
+<section class="hero" id="top" data-scene="0">
+  <div class="hero-main">
+    <div class="liquid-glass badge rise" style="--d:.4s"><b>Live</b>Working prototype, ready to try today</div>
+    <h1 class="h-hero blur center" data-blur>Farming Decisions Built to Outlast Bad Seasons</h1>
+    <p class="sub rise" style="--d:.8s">AgriNexus turns a farmer's land, water and budget into a clear season plan, diagnoses crop problems from a photo, and connects them to other farmers and better buyers. It's free for farmers, and paid for by the businesses that want to reach them.</p>
+    <div class="ctas rise" style="--d:1.1s">
+      <a data-site="app" class="liquid-glass-strong btn-glass" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63" target="_blank" rel="noopener">Open the Farmer App <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+      <a data-site="home" class="btn-plain" href="https://claude.ai/artifact/JVW3Gpqzek7UZuoNH1yUxT" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>Watch the 3D Story</a>
+    </div>
+    <div class="stats rise" style="--d:1.3s">
+      <div class="liquid-glass stat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c3 3.5 3 14.5 0 18"/><path d="M12 3c-3 3.5-3 14.5 0 18"/></svg>
+        <div class="num">86%</div>
+        <p>of India's farmers are small or marginal, working under 2 hectares</p>
+      </div>
+      <div class="liquid-glass stat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <div class="num">3 min</div>
+        <p>from entering your farm details to a full crop comparison</p>
+      </div>
+    </div>
+  </div>
+  <div class="trust rise" style="--d:1.4s">
+    <div class="liquid-glass pill">One platform for everyone in the chain</div>
+    <div class="names"><span>Farmers</span><span>FPOs</span><span>KVKs</span><span>Lenders</span><span>Buyers</span></div>
+  </div>
+</section>
+
+<!-- ================= PLATFORM ================= -->
+<section id="platform" data-scene=".6">
+  <div class="pad flexcol">
+    <div>
+      <p class="label">// The platform</p>
+      <h2 class="h-sec blur" data-blur>Every acre, end to end</h2>
+    </div>
+    <div class="grow" style="flex:1"></div>
+    <div class="grid3">
+      <article class="liquid-glass cap glass-fill">
+        <div class="cap-top">
+          <div class="liquid-glass ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4C11 4 4 11 4 20c9 0 16-7 16-16z"/></svg></div>
+          <div class="tags"><span class="liquid-glass tag">Soil tests</span><span class="liquid-glass tag">Weather</span><span class="liquid-glass tag">Crop photos</span><span class="liquid-glass tag">Water</span></div>
+        </div>
+        <div class="grow"></div>
+        <h3 class="h-card">Sense</h3>
+        <p class="body">Everything the farm tells us, in one place: soil reports, rainfall, water availability and photos from the field. Farmers add it in minutes, and it stays with them season after season.</p>
+      </article>
+      <article class="liquid-glass cap glass-fill">
+        <div class="cap-top">
+          <div class="liquid-glass ico"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2.5"/><path d="M9 6V3M15 6V3M9 21v-3M15 21v-3M6 9H3M6 15H3M21 9h-3M21 15h-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+          <div class="tags"><span class="liquid-glass tag">Crop planner</span><span class="liquid-glass tag">Crop doctor</span><span class="liquid-glass tag">Risk score</span><span class="liquid-glass tag">AI advisor</span></div>
+        </div>
+        <div class="grow"></div>
+        <h3 class="h-card">Decide</h3>
+        <p class="body">Before a rupee is spent, farmers see what each crop would cost, yield and earn on their own land, with the risk spelled out. Questions get answered in their own language, any time.</p>
+      </article>
+      <article class="liquid-glass cap glass-fill">
+        <div class="cap-top">
+          <div class="liquid-glass ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 12h16l-1.6 7.2a2 2 0 0 1-2 1.6H7.6a2 2 0 0 1-2-1.6L4 12z"/><path d="M12 3c.6 3-1 5-3.3 5.9C9.1 6.6 10.3 4.4 12 3zM12 3c-.6 3 1 5 3.3 5.9C14.9 6.6 13.7 4.4 12 3z"/></svg></div>
+          <div class="tags"><span class="liquid-glass tag">Farmer network</span><span class="liquid-glass tag">Pooled trucks</span><span class="liquid-glass tag">Best bid</span><span class="liquid-glass tag">Credit</span></div>
+        </div>
+        <div class="grow"></div>
+        <h3 class="h-card">Grow</h3>
+        <p class="body">After the harvest, farmers share what worked, pool transport with neighbours and sell to the best buyer. Each season's record makes the next plan sharper and the farmer easier to lend to.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= IDEAS ================= -->
+<section id="ideas" data-scene="1">
+  <div class="pad">
+    <p class="label">// What sets it apart</p>
+    <h2 class="h-sec blur" data-blur>Ideas the field has been waiting for</h2>
+
+    <div class="bento">
+      <article class="liquid-glass bx s7 glass-fill">
+        <div class="row"><h3 class="h-card">What-if crop planner</h3><span class="liquid-glass status live">Live</span></div>
+        <p class="body">In the app, farmers enter their location, soil, water and budget. It compares 22 crops, with a full report for each: investment, profit, a bad-year loss warning and risks. The chosen crop becomes a stage-by-stage season journey. Here is a quick taste.</p>
+        <a class="demo-link" data-demo="plan" href="#">Show it live in the app <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+        <div class="sim" id="sim">
+          <div class="sim-ctl">
+            <div><label for="sAcres">Land <output id="oAcres">5 acres</output></label><input type="range" id="sAcres" min="1" max="20" step="0.5" value="5"></div>
+            <div><label for="sWater">Water <output id="oWater">450 mm</output></label><input type="range" id="sWater" min="200" max="1400" step="10" value="450"></div>
+            <div><label for="sBudget">Budget <output id="oBudget">₹50,000</output></label><input type="range" id="sBudget" min="10000" max="300000" step="5000" value="50000"></div>
+          </div>
+          <div class="bars" id="bars" aria-live="polite"></div>
+          <div class="verdict" id="verdict"></div>
+        </div>
+      </article>
+
+      <article class="liquid-glass bx s5 glass-fill">
+        <div class="row"><h3 class="h-card">Crop doctor</h3><span class="liquid-glass status live">Live</span></div>
+        <p class="body">The farmer photographs a sick leaf and asks "what is this?" The AI looks at the photo and explains the likely problem and the next step in plain words. For chemical doses, it points them to their local agriculture office.</p>
+        <a class="demo-link" data-demo="doctor" href="#">Show it live in the app <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+        <div class="grow"></div>
+        <div class="tags" style="justify-content:flex-start"><span class="liquid-glass tag">Photo diagnosis</span><span class="liquid-glass tag">Plain-language advice</span></div>
+      </article>
+
+      <article class="liquid-glass bx s4 glass-fill">
+        <div class="row"><h3 class="h-card">Farmer network</h3><span class="liquid-glass status live">Live</span></div>
+        <p class="body">Farmers ask each other what worked on their soil and in their weather. The more farmers join, the more useful it gets, and that's hard for a competitor to copy.</p>
+      <a class="demo-link" data-demo="network" href="#">Show it live in the app <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+        </article>
+      <article class="liquid-glass bx s4 glass-fill">
+        <div class="row"><h3 class="h-card">Their language</h3><span class="liquid-glass status live">Live</span></div>
+        <p class="body">Tamil and Hindi are built in, and the AI answers in the language the farmer picks. Most farm apps stop at English.</p>
+      <a class="demo-link" data-demo="home" href="#">Show it live in the app <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+        </article>
+      <article class="liquid-glass bx s4 glass-fill">
+        <div class="row"><h3 class="h-card">Research console</h3><span class="liquid-glass status live">Live</span></div>
+        <p class="body">One agronomist at a KVK or FPO can update crop prices and data, post pest and scheme alerts, and see what farmers are choosing. It all runs from one screen.</p>
+      <a class="demo-link" data-demo="admin" href="#">Show it live in the app <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+        </article>
+
+      <article class="liquid-glass bx s6 glass-fill">
+        <div class="row"><h3 class="h-card">Farm credit passport</h3><span class="liquid-glass status">Next</span></div>
+        <p class="body">Each season's plan, inputs and harvest become a verified record a lender can read. That gives farmers without formal credit history a path to fair input loans instead of informal moneylenders.</p>
+      </article>
+      <article class="liquid-glass bx s6 glass-fill">
+        <div class="row"><h3 class="h-card">Claim-ready insurance evidence</h3><span class="liquid-glass status">Next</span></div>
+        <p class="body">Geo-tagged, dated crop photos and a local weather log are gathered as the season happens. When a crop fails, the farmer already has the evidence a crop-insurance claim asks for.</p>
+      </article>
+
+      <article class="liquid-glass bx s4 glass-fill">
+        <div class="row"><h3 class="h-card">WhatsApp and missed call</h3><span class="liquid-glass status">Next</span></div>
+        <p class="body">Farmers get the same advice over WhatsApp and a voice line, so it reaches those with basic phones and patchy data.</p>
+      </article>
+      <article class="liquid-glass bx s4 glass-fill">
+        <div class="row"><h3 class="h-card">Pooled selling</h3><span class="liquid-glass status">Next</span></div>
+        <p class="body">Neighbouring farms combine loads to share one truck and sell together, so a small harvest gets the rate of a large one.</p>
+      </article>
+      <article class="liquid-glass bx s4 glass-fill">
+        <div class="row"><h3 class="h-card">Water and carbon credits</h3><span class="liquid-glass status">Next</span></div>
+        <p class="body">Practices the app already tracks, like drip irrigation and residue composting, become income through verified sustainability programmes.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BUSINESS ================= -->
+<section id="business" data-scene="1.4">
+  <div class="pad">
+    <p class="label">// The business</p>
+    <h2 class="h-sec blur" data-blur>Free for farmers. Paid by the chain.</h2>
+
+    <div class="market">
+      <div class="liquid-glass mk glass-fill"><div class="num">146M</div><p>farm holdings in India, the market the platform is built for</p></div>
+      <div class="liquid-glass mk glass-fill"><div class="num">1.08 ha</div><p>average holding size, too small for enterprise farm software</p></div>
+      <div class="liquid-glass mk glass-fill"><div class="num">10,000</div><p>FPOs targeted under the central government's FPO scheme, our first customers</p></div>
+    </div>
+    <p class="src">Holdings and size: Agriculture Census 2015–16. FPO target: Government of India scheme for the Formation and Promotion of 10,000 FPOs. Check the latest figures before presenting.</p>
+
+    <div class="rev">
+      <div class="liquid-glass rv glass-fill"><span class="who">FPOs and cooperatives pay</span><h3 class="h-card" style="font-size:1.7rem">Season licence</h3><p class="body">The research console, member dashboards and bulk advisories for the whole membership.</p><div class="price">₹99 <small>per member per season</small></div></div>
+      <div class="liquid-glass rv glass-fill"><span class="who">Buyers and processors pay</span><h3 class="h-card" style="font-size:1.7rem">Sourcing fee</h3><p class="body">A small commission on pooled loads they buy through the platform, since they get graded, aggregated supply.</p><div class="price">1–2% <small>of trade value</small></div></div>
+      <div class="liquid-glass rv glass-fill"><span class="who">Lenders and insurers pay</span><h3 class="h-card" style="font-size:1.7rem">Verified farm data</h3><p class="body">The credit passport and claim evidence are used only with the farmer's consent, and priced per report or loan.</p><div class="price">₹50–200 <small>per report</small></div></div>
+      <div class="liquid-glass rv glass-fill"><span class="who">Input companies and government pay</span><h3 class="h-card" style="font-size:1.7rem">Insights and reach</h3><p class="body">Anonymous, aggregated demand trends by district, and white-label deployments for state agriculture programmes.</p><div class="price">Annual <small>contracts</small></div></div>
+    </div>
+
+    <div class="liquid-glass unit glass-fill">
+      <h3 class="h-card" style="font-size:1.8rem">One FPO, one season (illustrative)</h3>
+      <div><div class="num">500</div><p class="body" style="margin:.3rem 0 0">member farmers</p></div>
+      <div><div class="num">₹49.5k</div><p class="body" style="margin:.3rem 0 0">licence revenue at ₹99 each</p></div>
+      <div><div class="num">₹60k+</div><p class="body" style="margin:.3rem 0 0">sourcing fees if 1,000 quintals trade at 1%</p></div>
+      <div><div class="num">~₹0</div><p class="body" style="margin:.3rem 0 0">cost to each farmer</p></div>
+    </div>
+    <p class="src">Prices are proposed starting points to test in the pilot, not validated figures.</p>
+  </div>
+</section>
+
+<!-- ================= ROADMAP ================= -->
+<section id="plan" data-scene="1.7">
+  <div class="pad">
+    <p class="label">// The plan</p>
+    <h2 class="h-sec blur" data-blur>From one village to every district</h2>
+    <div class="steps">
+      <div class="liquid-glass step glass-fill"><span class="n">1</span><span class="when">Months 0–3</span><h3 class="h-card" style="font-size:1.7rem">Pilot</h3>
+        <ul><li>Partner with 1 FPO or KVK</li><li>Onboard 200 farmers</li><li>Agronomist loads local crop data</li></ul>
+        <span class="goal">Goal: 60% of farmers return each week</span></div>
+      <div class="liquid-glass step glass-fill"><span class="n">2</span><span class="when">Months 3–9</span><h3 class="h-card" style="font-size:1.7rem">Prove</h3>
+        <ul><li>Launch WhatsApp and voice access</li><li>Expand to 3–5 FPOs</li><li>Measure profit per acre against last season</li></ul>
+        <span class="goal">Goal: first paying FPO licences</span></div>
+      <div class="liquid-glass step glass-fill"><span class="n">3</span><span class="when">Months 9–18</span><h3 class="h-card" style="font-size:1.7rem">Monetise</h3>
+        <ul><li>Launch pooled selling with 2 buyers</li><li>Credit passport pilot with a lender</li><li>Insurance evidence pilot</li></ul>
+        <span class="goal">Goal: three revenue lines live</span></div>
+      <div class="liquid-glass step glass-fill"><span class="n">4</span><span class="when">Month 18 onward</span><h3 class="h-card" style="font-size:1.7rem">Scale</h3>
+        <ul><li>State agriculture department partnership</li><li>More crops and languages</li><li>Water and carbon credit programme</li></ul>
+        <span class="goal">Goal: 50,000 farmers across 2 states</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WHY IT WINS ================= -->
+<section id="why" data-scene="2">
+  <div class="pad">
+    <p class="label">// For the judges</p>
+    <h2 class="h-sec blur" data-blur>Why this one wins</h2>
+    <div class="crit">
+      <div class="liquid-glass cr glass-fill"><h3 class="h-card" style="font-size:1.8rem">Innovation</h3><p class="body">It connects the whole season, from soil to sale, instead of solving one step. The what-if planner shows the trade-off before money is spent.</p></div>
+      <div class="liquid-glass cr glass-fill"><h3 class="h-card" style="font-size:1.8rem">Impact</h3><p class="body">It's built for the 86% of farmers that enterprise tools ignore, in their language, with the core app free forever.</p></div>
+      <div class="liquid-glass cr glass-fill"><h3 class="h-card" style="font-size:1.8rem">Feasibility</h3><p class="body">It isn't a mockup. The planner, AI advisor, photo diagnosis, network and admin console all work today at the app link.</p></div>
+      <div class="liquid-glass cr glass-fill"><h3 class="h-card" style="font-size:1.8rem">Scalability</h3><p class="body">One agronomist serves thousands through the console, and every farmer who joins makes the network more useful to the next.</p></div>
+      <div class="liquid-glass cr glass-fill"><h3 class="h-card" style="font-size:1.8rem">Viability</h3><p class="body">Four revenue lines, all paid by businesses that already spend money to reach farmers, so farmers never carry the cost.</p></div>
+    </div>
+
+    <div class="liquid-glass risks glass-fill">
+      <h3 class="h-card" style="font-size:1.8rem;margin-bottom:1rem">Risks we've planned for</h3>
+      <div class="tblwrap"><table>
+        <thead><tr><th>Risk</th><th>How we handle it</th></tr></thead>
+        <tbody>
+          <tr><td>Farmers don't trust app advice</td><td>Launch through FPOs and KVKs farmers already trust. Every recommendation shows its reasoning, and the network lets farmers verify it with each other.</td></tr>
+          <tr><td>Wrong advice causes crop loss</td><td>The AI never gives chemical doses, flags uncertainty, and points to local experts. An agronomist reviews the crop data behind every recommendation.</td></tr>
+          <tr><td>Poor connectivity and basic phones</td><td>A light, fast app first, with WhatsApp and voice next so the advice doesn't depend on a smartphone.</td></tr>
+          <tr><td>Farm data misuse</td><td>Farmers own their data. It's shared with lenders or insurers only with explicit consent, and aggregate insights are anonymised.</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FINAL ================= -->
+<section class="final" id="final" data-scene="2.2">
+  <h2 class="brand blur center" data-blur>AgriNexus</h2>
+  <p class="tagline">One Platform. Your Entire Farm.</p>
+  <p class="sub2">Plan smarter. Farm better. Grow sustainably.</p>
+  <a data-site="app" class="liquid-glass-strong btn-glass" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63" target="_blank" rel="noopener">Open the Farmer App <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+  <div class="links">
+    <a data-site="app" class="liquid-glass lk glass-fill" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63" target="_blank" rel="noopener"><div><b>Farmer app</b><span>Planner, AI advisor, crop doctor, network, admin</span></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+    <a data-site="home" class="liquid-glass lk glass-fill" href="https://claude.ai/artifact/JVW3Gpqzek7UZuoNH1yUxT" target="_blank" rel="noopener"><div><b>3D story</b><span>The farm lifecycle, scroll by scroll</span></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+  </div>
+  <p class="foot">Market figures are cited from public sources. Pricing and targets are proposals to validate in the pilot.</p>
+</section>
+</main>
+
+<script>
+(() => {
+'use strict';
+/* ---- site links: edit these three lines to re-point every link on this page ---- */
+const SITE_LINKS = {
+  home:  'https://claude.ai/artifact/JVW3Gpqzek7UZuoNH1yUxT',
+  app:   'https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63',
+  pitch: 'https://claude.ai/artifact/RoEruk2N98L7q6XNmTKgT5'
+};
+document.querySelectorAll('[data-site]').forEach(a => {
+  const [key, hash] = a.dataset.site.split('#');
+  if (SITE_LINKS[key]) a.href = SITE_LINKS[key] + (hash ? '#' + hash : '');
+});
+
+const $ = s => document.querySelector(s), $$ = s => Array.from(document.querySelectorAll(s));
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+
+/* ---------- load sequence + BlurText ---------- */
+$$('[data-blur]').forEach(el => {
+  el.setAttribute('aria-label', el.textContent.trim());
+  el.innerHTML = el.textContent.trim().split(/\s+/).map((w, i) => `<span class="w" aria-hidden="true" style="transition-delay:${(i * .1).toFixed(2)}s">${w}</span>`).join('');
+});
+const io = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .1 });
+$$('[data-blur]').forEach(el => io.observe(el));
+requestAnimationFrame(() => setTimeout(() => document.body.classList.add('loaded'), 60));
+
+/* ---------- mini simulator (same model as the app) ---------- */
+const CROPS = [
+  { name:'Rice', need:1200, ky:1.2, maxY:26, price:2300, cost:11000, risk:20, sus:40 },
+  { name:'Groundnut', need:500, ky:0.7, maxY:9, price:6780, cost:12500, risk:26, sus:82 },
+  { name:'Maize', need:600, ky:1.25, maxY:24, price:2225, cost:9500, risk:24, sus:66 }
+];
+const inr = n => (n < 0 ? '−₹' : '₹') + Math.round(Math.abs(n)).toLocaleString('en-IN');
+const S = { a: $('#sAcres'), w: $('#sWater'), b: $('#sBudget') };
+function runSim() {
+  const A = +S.a.value, W = +S.w.value, B = +S.b.value;
+  Object.values(S).forEach(el => el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min) * 100) + '%'));
+  $('#oAcres').textContent = `${A} acres`; $('#oWater').textContent = `${W} mm`; $('#oBudget').textContent = inr(B);
+  const out = CROPS.map(c => {
+    const planted = Math.min(A, B / c.cost), r = Math.min(1, W / c.need), yf = Math.max(0, 1 - c.ky * (1 - r));
+    const profit = c.maxY * yf * planted * c.price - c.cost * planted;
+    const risk = clamp(c.risk + (1 - r) * c.ky * 55 + (planted < A - .01 ? 6 : 0), 5, 95);
+    return { ...c, profit, risk, score: profit * (1 - risk / 150) + c.sus * 600 };
+  });
+  const best = out.reduce((a, b) => b.score > a.score ? b : a);
+  const max = Math.max(...out.map(c => Math.abs(c.profit)), 1);
+  $('#bars').innerHTML = out.map(c => `<div class="bar ${c === best ? 'best' : ''}"><b>${c.name}</b><i><span style="width:${(Math.max(0, c.profit) / max * 100).toFixed(1)}%"></span></i><em>${inr(c.profit)}</em></div>`).join('');
+  const word = best.risk < 35 ? 'low' : best.risk < 60 ? 'medium' : 'high';
+  $('#verdict').textContent = `Plant ${best.name.toLowerCase()}: about ${inr(best.profit)} profit at ${word} risk.`;
+}
+Object.values(S).forEach(el => el.addEventListener('input', runSim));
+runSim();
+
+/* ---------- pitch mode ---------- */
+const sections = $$('main > section');
+const html = document.documentElement;
+function currentIndex() { const mid = scrollY + innerHeight / 2; let idx = 0; sections.forEach((s, i) => { if (s.offsetTop <= mid) idx = i; }); return idx; }
+function go(i) { i = clamp(i, 0, sections.length - 1); sections[i].scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); }
+function setPitch(on) {
+  html.classList.toggle('pitch', on); $('#pitchBtn').setAttribute('aria-pressed', on);
+  if (on) { try { html.requestFullscreen && html.requestFullscreen().catch(() => {}); } catch (e) {} go(currentIndex()); }
+  else if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); }
+  updateHud();
+}
+function updateHud() { $('#slideNo').textContent = `${currentIndex() + 1} / ${sections.length}`; }
+$('#pitchBtn').addEventListener('click', () => setPitch(!html.classList.contains('pitch')));
+$('#exitPitch').addEventListener('click', () => setPitch(false));
+$('#prevSlide').addEventListener('click', () => go(currentIndex() - 1));
+$('#nextSlide').addEventListener('click', () => go(currentIndex() + 1));
+addEventListener('scroll', () => { if (html.classList.contains('pitch')) updateHud(); }, { passive: true });
+addEventListener('keydown', e => {
+  if (e.target.matches('input, textarea')) return;
+  if (e.key === 'p' || e.key === 'P') { setPitch(!html.classList.contains('pitch')); return; }
+  if (!html.classList.contains('pitch')) return;
+  if (['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)) { e.preventDefault(); go(currentIndex() + 1); }
+  if (['ArrowLeft','ArrowUp','PageUp'].includes(e.key)) { e.preventDefault(); go(currentIndex() - 1); }
+  if (e.key === 'Escape') setPitch(false);
+});
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && html.classList.contains('pitch')) { /* stay in pitch layout */ } });
+
+/* ---------- live demo: jump into the farmer app and come back to the same slide ---------- */
+function demoHref(tab) {
+  const slide = sections[currentIndex()].id || 'top';
+  return SITE_LINKS.app + '#' + tab + '&from=pitch&slide=' + encodeURIComponent(slide) + (html.classList.contains('pitch') ? '&pm=1' : '');
+}
+$$('[data-demo]').forEach(a => {
+  a.target = '_top';
+  const set = () => { a.href = demoHref(a.dataset.demo); };
+  a.addEventListener('pointerdown', set); a.addEventListener('focus', set); a.addEventListener('click', set);
+  set();
+});
+addEventListener('scroll', () => { $$('[data-demo]').forEach(a => { a.href = demoHref(a.dataset.demo); }); }, { passive: true });
+const dock = $('#demoDock'), dockBtn = $('#demoToggle');
+dockBtn.addEventListener('click', () => { const on = !dock.classList.contains('open'); dock.classList.toggle('open', on); dockBtn.setAttribute('aria-expanded', on); });
+addEventListener('keydown', e => {
+  if (e.target.matches('input, textarea')) return;
+  const map = { '1':'plan', '2':'doctor', '3':'ai', '4':'network', '5':'admin', '6':'journey' };
+  if (html.classList.contains('pitch') && map[e.key]) { location.href = demoHref(map[e.key]); }
+});
+(function restoreFromDemo() {
+  const raw = location.hash.slice(1); if (!raw) return;
+  const q = {}; raw.split('&').forEach(part => { const [k, v] = part.split('='); q[decodeURIComponent(k)] = v === undefined ? true : decodeURIComponent(v); });
+  const slideId = q.slide || (!raw.includes('=') ? raw.split('&')[0] : null);
+  const target = slideId && document.getElementById(slideId);
+  if (q.pm === '1') { html.classList.add('pitch'); $('#pitchBtn').setAttribute('aria-pressed', true); }
+  if (target) setTimeout(() => { target.scrollIntoView({ behavior: 'auto' }); updateHud(); }, 120);
+  if (q.slide) { const t = $('#backToast'); t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2600); }
+  history.replaceState(null, '', location.pathname + location.search);
+})();
+
+/* ---------- GPU crop field: golden hour → dusk → night as you scroll ---------- */
+const canvas = $('#field');
+let gl = null;
+try { gl = canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'high-performance' }); } catch (e) {}
+if (!gl) { html.classList.add('no-gl'); return; }
+
+const VS = 'attribute vec2 p; void main(){ gl_Position = vec4(p, 0., 1.); }';
+const FS = `precision highp float;
+uniform vec2 uRes; uniform float uTime; uniform float uScene; uniform vec2 uMouse;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
+  return mix(mix(hash(i), hash(i+vec2(1.,0.)), f.x), mix(hash(i+vec2(0.,1.)), hash(i+vec2(1.,1.)), f.x), f.y); }
+float fbm(vec2 p){ float v = 0., a = .5; for (int i = 0; i < 5; i++){ v += a * noise(p); p = p * 2.02 + 11.3; a *= .5; } return v; }
+vec3 pal(float s, vec3 a, vec3 b, vec3 c){ return s < 1. ? mix(a, b, smoothstep(0., 1., s)) : mix(b, c, smoothstep(1., 2., s)); }
+void main(){
+  vec2 uv = gl_FragCoord.xy / uRes;
+  float asp = uRes.x / uRes.y;
+  float s = clamp(uScene, 0., 2.);
+  float hz = .44 + uMouse.y * .015;
+  vec3 skyTop = pal(s, vec3(.03,.04,.07), vec3(.03,.025,.06), vec3(.005,.01,.025));
+  vec3 skyHor = pal(s, vec3(.62,.34,.12), vec3(.36,.13,.14), vec3(.04,.07,.11));
+  vec3 sunCol = pal(s, vec3(1.,.72,.36), vec3(1.,.45,.3), vec3(.55,.65,.85));
+  float sunAmt = pal(s, vec3(1.), vec3(.65), vec3(.25)).x;
+  vec2 sunP = vec2(.63 + uMouse.x * .02, hz + mix(.07, -.02, clamp(s, 0., 1.)) + (s > 1. ? (s - 1.) * .32 : 0.));
+  vec3 col;
+  float d = length((uv - sunP) * vec2(asp, 1.));
+  if (uv.y > hz) {
+    float t = pow(clamp((uv.y - hz) / (1. - hz), 0., 1.), .55);
+    col = mix(skyHor, skyTop, t);
+    vec2 cuv = vec2(uv.x * asp * 1.4 + uTime * .006, (uv.y - hz) * 5.);
+    float cl = smoothstep(.52, .85, fbm(cuv * 1.6)) * (1. - t * .6);
+    col = mix(col, mix(skyTop * 1.4, sunCol * .55, exp(-d * 2.2) * sunAmt), cl * .75);
+    col += sunCol * (exp(-d * 7.) * .55 + exp(-d * 38.) * .9) * sunAmt;
+    float night = smoothstep(1.3, 2., s);
+    vec2 g = floor(uv * uRes / 2.2); float st = hash(g);
+    col += vec3(.85, .9, 1.) * step(.9975, st) * night * (.5 + .5 * sin(uTime * 2. + st * 60.)) * t;
+  } else {
+    float yb = hz - uv.y;
+    float z = .11 / (yb + .003);
+    float xw = (uv.x - .5) * asp * z;
+    float wind = fbm(vec2(xw * .55, z * .7 - uTime * .32));
+    float rows = sin(xw * 15. + wind * 1.4);
+    float fade = clamp(1. - z * .07, 0., 1.);
+    float crop = mix(.55, smoothstep(-.35, .85, rows + wind * .9 - .15), fade);
+    vec3 soil = pal(s, vec3(.05,.03,.015), vec3(.035,.02,.02), vec3(.01,.012,.015));
+    vec3 leaf = pal(s, vec3(.13,.2,.06), vec3(.08,.1,.05), vec3(.02,.04,.04)) * (.55 + wind * .9);
+    col = mix(soil, leaf, crop);
+    float rim = pow(max(0., 1. - abs(uv.x - sunP.x) * 1.3), 3.) * exp(-yb * 3.5);
+    col += sunCol * rim * crop * wind * .55 * sunAmt;
+    col += sunCol * pow(max(0., 1. - abs(uv.x - sunP.x) * 2.2), 4.) * exp(-yb * 26.) * .35 * sunAmt;
+    col = mix(col, skyHor * .75, exp(-yb * 16.));
+    float night = smoothstep(1.4, 2., s);
+    vec2 fp = vec2(uv.x * 30., uv.y * 22.); vec2 fi = floor(fp); float fh = hash(fi);
+    vec2 fo = fract(fp) - .5 - vec2(sin(uTime * .7 + fh * 30.), cos(uTime * .6 + fh * 20.)) * .25;
+    col += vec3(.75, .95, .45) * smoothstep(.07, .0, length(fo)) * step(.93, fh) * night * (.5 + .5 * sin(uTime * 3. + fh * 50.));
+  }
+  vec2 vq = uv - .5; col *= 1. - dot(vq, vq) * .9;
+  col += (hash(uv * uRes + uTime) - .5) * .025;
+  gl_FragColor = vec4(max(col, 0.), 1.);
+}`;
+function sh(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+let prog;
+try {
+  prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error('link');
+} catch (e) { html.classList.add('no-gl'); return; }
+gl.useProgram(prog);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+const U = { res: gl.getUniformLocation(prog, 'uRes'), time: gl.getUniformLocation(prog, 'uTime'), scene: gl.getUniformLocation(prog, 'uScene'), mouse: gl.getUniformLocation(prog, 'uMouse') };
+
+const small = matchMedia('(pointer: coarse)').matches || innerWidth < 760;
+function resize() {
+  const dpr = Math.min(devicePixelRatio || 1, small ? 1 : 1.5) * (small ? .75 : .85);
+  canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+}
+resize(); addEventListener('resize', resize);
+
+let mx = 0, my = 0, cmx = 0, cmy = 0;
+if (!small) addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = .5 - e.clientY / innerHeight; }, { passive: true });
+
+function sceneTarget() {
+  const mid = scrollY + innerHeight / 2; let t = 0;
+  for (let i = 0; i < sections.length; i++) {
+    const a = sections[i], b = sections[i + 1];
+    const va = parseFloat(a.dataset.scene || 0);
+    if (!b) { t = va; break; }
+    const ca = a.offsetTop + a.offsetHeight / 2, cb = b.offsetTop + b.offsetHeight / 2;
+    if (mid <= ca) { t = va; break; }
+    if (mid < cb) { const k = (mid - ca) / (cb - ca); t = va + (parseFloat(b.dataset.scene || 0) - va) * k; break; }
+  }
+  return t;
+}
+let scene = sceneTarget(), time = 0, last = performance.now(), dirty = true;
+addEventListener('scroll', () => { dirty = true; }, { passive: true });
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (!document.hidden) {
+    if (!reduce) time += dt;
+    const target = sceneTarget();
+    scene += (target - scene) * (reduce ? 1 : 1 - Math.exp(-dt * 3));
+    cmx += (mx - cmx) * .04; cmy += (my - cmy) * .04;
+    if (!reduce || dirty) {
+      gl.uniform2f(U.res, canvas.width, canvas.height); gl.uniform1f(U.time, time); gl.uniform1f(U.scene, scene); gl.uniform2f(U.mouse, cmx, cmy);
+      gl.drawArrays(gl.TRIANGLES, 0, 3); dirty = false;
+    }
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
