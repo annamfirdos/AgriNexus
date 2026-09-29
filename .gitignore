@@ -1,8 +1,18 @@
-# Node / Vite (design-starter/)
+# Dependencies
 node_modules/
 dist/
 .vite/
 *.local
+
+# Environment variables
+.env
+.env.production
+
+# Database & runtime data
+data/*.db
+data/*.sqlite
+data/*.json
+!data/.gitkeep
 
 # OS / editor cruft
 .DS_Store

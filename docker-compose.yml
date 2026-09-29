@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  agrinexus:
+    build: .
+    container_name: agrinexus_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ADMIN_PASSCODE=${ADMIN_PASSCODE:-agriadmin2026}
+    volumes:
+      - agrinexus_data:/app/data
+
+volumes:
+  agrinexus_data:
+    driver: local

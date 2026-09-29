@@ -1,0 +1,26 @@
+{
+  "name": "agrinexus",
+  "version": "1.0.0",
+  "description": "AgriNexus - Full-Stack AI Farm Planning & Lifecycle Platform",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "keywords": [
+    "agritech",
+    "agriculture",
+    "gemini-ai",
+    "farming",
+    "crop-planning",
+    "india"
+  ],
+  "author": "AgriNexus Team",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

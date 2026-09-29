@@ -669,11 +669,11 @@ input[type=range]::-webkit-slider-thumb{ border-color:#fff; background:#1E4D22; 
 <script>
 (() => {
 'use strict';
-/* ---- site links: edit these three lines to re-point every link on this page ---- */
+const isHosted = location.protocol.startsWith('http');
 const SITE_LINKS = {
-  home:  'https://claude.ai/artifact/JVW3Gpqzek7UZuoNH1yUxT',
-  app:   'https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63',
-  pitch: 'https://claude.ai/artifact/RoEruk2N98L7q6XNmTKgT5'
+  home:  isHosted ? '/' : 'home.html',
+  app:   isHosted ? '/app' : 'farmer-app.html',
+  pitch: isHosted ? '/pitch' : 'pitch.html'
 };
 document.querySelectorAll('[data-site]').forEach(a => {
   const [key, hash] = a.dataset.site.split('#');
