@@ -1599,7 +1599,11 @@ const API = {
       headers: { 'Content-Type': 'application/json', 'x-user-id': this.userId },
       body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error('API POST ' + url + ' failed');
+    if (!res.ok) {
+      let errText = '';
+      try { const j = await res.json(); errText = j.error || j.message || ''; } catch (_) {}
+      throw new Error(errText || ('API POST ' + url + ' failed (' + res.status + ')'));
+    }
     return res.json();
   },
   async delete(url) {
@@ -2546,8 +2550,10 @@ async function sendChat(q) {
       $('#chatSend').disabled = false;
       return;
     } catch (e) {
-      thinking.remove();
-      addMsg('bot', localAnswer(q));
+      thinking.classList.remove('thinking');
+      thinking.textContent = (e && e.message && e.message.includes('API')) 
+        ? `⚠️ Gemini AI Notice: ${e.message}\n\nMake sure your GEMINI_API_KEY from Google AI Studio (starting with AIzaSy...) is saved in .env and the server is restarted.`
+        : localAnswer(q);
       $('#chatSend').disabled = false;
       return;
     }

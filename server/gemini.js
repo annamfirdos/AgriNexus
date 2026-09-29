@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 let GoogleGenerativeAI = null;
 try {
   const genAiModule = require('@google/generative-ai');
@@ -25,48 +28,128 @@ Guidelines for your responses:
 - Never give exact toxic chemical or unverified pesticide dosages — advise consulting product labels or local Krishi Vigyan Kendra (KVK) officers.`;
 
 function getApiKey() {
-  return process.env.GEMINI_API_KEY || '';
+  if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim()) {
+    return process.env.GEMINI_API_KEY.trim();
+  }
+  try {
+    const envPath = path.join(__dirname, '..', '.env');
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf-8');
+      const match = content.match(/GEMINI_API_KEY\s*=\s*(.+)/);
+      if (match && match[1]) {
+        return match[1].trim().replace(/^["']|["']$/g, '');
+      }
+    }
+  } catch (_) {}
+  return '';
 }
 
-// Native REST fallback for Gemini API if SDK is not present
-async function callGeminiRest({ model = DEFAULT_MODEL, contents, systemInstruction, responseMimeType, temperature = 0.5 }) {
+let activeWorkingModel = null;
+let discoveredModels = null;
+
+const DEFAULT_CANDIDATES = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-flash-8b',
+  'gemini-2.5-pro',
+  'gemini-1.5-pro',
+  'gemini-pro'
+];
+
+async function discoverAvailableModels(apiKey) {
+  if (discoveredModels && discoveredModels.length > 0) {
+    return discoveredModels;
+  }
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.models)) {
+        const supported = data.models
+          .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+          .map(m => m.name.replace(/^models\//, ''));
+        if (supported.length > 0) {
+          discoveredModels = supported;
+          return discoveredModels;
+        }
+      }
+    }
+  } catch (_) {}
+  return DEFAULT_CANDIDATES;
+}
+
+// Native REST fallback for Gemini API with dynamic multi-model discovery
+async function callGeminiRest({ contents, systemInstruction, responseMimeType, temperature = 0.5 }) {
   const apiKey = getApiKey();
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is not configured on the server.');
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  const body = {
-    contents: contents,
-    generationConfig: {
-      temperature: temperature
-    }
-  };
+  const availableModels = await discoverAvailableModels(apiKey);
+  const modelsToTry = activeWorkingModel
+    ? [activeWorkingModel, ...availableModels.filter(m => m !== activeWorkingModel)]
+    : [...availableModels, ...DEFAULT_CANDIDATES.filter(m => !availableModels.includes(m))];
 
-  if (responseMimeType) {
-    body.generationConfig.responseMimeType = responseMimeType;
-  }
+  let lastError = null;
 
-  if (systemInstruction) {
-    body.systemInstruction = {
-      parts: [{ text: systemInstruction }]
+  for (const model of modelsToTry) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const body = {
+      contents: contents,
+      generationConfig: {
+        temperature: temperature
+      }
     };
+
+    if (responseMimeType) {
+      body.generationConfig.responseMimeType = responseMimeType;
+    }
+
+    if (systemInstruction) {
+      body.systemInstruction = {
+        parts: [{ text: systemInstruction }]
+      };
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        activeWorkingModel = model; // Cache the verified working model
+        return text;
+      } else {
+        const errText = await response.text();
+        lastError = new Error(`Gemini API error (${response.status} on model ${model}): ${errText}`);
+        // If 404 (model not found), continue loop to try next model candidate
+        if (response.status === 404) {
+          continue;
+        }
+        // If other error, still try fallback candidate if quota/version issue
+        if (response.status === 400 || response.status === 429) {
+          continue;
+        }
+        throw lastError;
+      }
+    } catch (netErr) {
+      lastError = netErr;
+      if (netErr.message && (netErr.message.includes('404') || netErr.message.includes('400') || netErr.message.includes('429'))) {
+        continue;
+      }
+      throw netErr;
+    }
   }
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini API error (${response.status}): ${errText}`);
-  }
-
-  const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  return text;
+  throw lastError || new Error('No compatible Gemini model found for this API key.');
 }
 
 module.exports = {
@@ -109,21 +192,14 @@ module.exports = {
     });
 
     try {
-      if (GoogleGenerativeAI) {
-        const ai = new GoogleGenerativeAI(apiKey);
-        const model = ai.getGenerativeModel({
-          model: DEFAULT_MODEL,
-          systemInstruction
-        });
-        const result = await model.generateContent({ contents });
-        return { text: result.response.text() || '', offline: false };
-      } else {
-        const text = await callGeminiRest({ contents, systemInstruction, temperature: 0.7 });
-        return { text, offline: false };
-      }
+      const text = await callGeminiRest({ contents, systemInstruction, temperature: 0.7 });
+      return { text, offline: false };
     } catch (err) {
       console.error('Gemini Chat Error:', err);
-      throw err;
+      return {
+        text: `⚠️ Gemini AI Notice: ${err.message}`,
+        offline: true
+      };
     }
   },
 
@@ -178,22 +254,11 @@ ${langLine}`;
     parts.push({ text: promptText });
 
     try {
-      let rawJson = '';
-      if (GoogleGenerativeAI) {
-        const ai = new GoogleGenerativeAI(apiKey);
-        const model = ai.getGenerativeModel({
-          model: DEFAULT_MODEL,
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.3 }
-        });
-        const result = await model.generateContent({ contents: [{ role: 'user', parts }] });
-        rawJson = result.response.text() || '{}';
-      } else {
-        rawJson = await callGeminiRest({
-          contents: [{ role: 'user', parts }],
-          responseMimeType: 'application/json',
-          temperature: 0.3
-        });
-      }
+      const rawJson = await callGeminiRest({
+        contents: [{ role: 'user', parts }],
+        responseMimeType: 'application/json',
+        temperature: 0.3
+      });
       return JSON.parse(rawJson);
     } catch (err) {
       console.error('Gemini Diagnose Error:', err);
@@ -220,18 +285,10 @@ Plan: ${option.name || option.crop}, investment ₹${option.invest || 0}, expect
 ${langLine}`;
 
     try {
-      let text = '';
-      if (GoogleGenerativeAI) {
-        const ai = new GoogleGenerativeAI(apiKey);
-        const model = ai.getGenerativeModel({ model: DEFAULT_MODEL });
-        const result = await model.generateContent(prompt);
-        text = result.response.text() || '';
-      } else {
-        text = await callGeminiRest({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          temperature: 0.6
-        });
-      }
+      const text = await callGeminiRest({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        temperature: 0.6
+      });
       return { text };
     } catch (err) {
       console.error('Gemini Plan Review Error:', err);
@@ -248,18 +305,10 @@ ${langLine}`;
     const prompt = `Translate this farming message into simple ${targetLangName} that a farmer in India can read easily. Keep numbers, units, dates and product names as they are. Reply with only the translation.\n\n${text}`;
 
     try {
-      let resultText = '';
-      if (GoogleGenerativeAI) {
-        const ai = new GoogleGenerativeAI(apiKey);
-        const model = ai.getGenerativeModel({ model: DEFAULT_MODEL });
-        const result = await model.generateContent(prompt);
-        resultText = (result.response.text() || '').trim();
-      } else {
-        resultText = (await callGeminiRest({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          temperature: 0.2
-        })).trim();
-      }
+      const resultText = (await callGeminiRest({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        temperature: 0.2
+      })).trim();
       return { text: resultText || text };
     } catch (err) {
       console.error('Gemini Translation Error:', err);
@@ -305,18 +354,10 @@ Provide a concise 3-part advisory (under 160 words):
 ${langLine}`;
 
     try {
-      let text = '';
-      if (GoogleGenerativeAI) {
-        const ai = new GoogleGenerativeAI(apiKey);
-        const model = ai.getGenerativeModel({ model: DEFAULT_MODEL });
-        const result = await model.generateContent(prompt);
-        text = result.response.text() || '';
-      } else {
-        text = await callGeminiRest({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          temperature: 0.5
-        });
-      }
+      const text = await callGeminiRest({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        temperature: 0.5
+      });
       return { text };
     } catch (err) {
       console.error('Gemini Scenario Explanation Error:', err);
@@ -359,18 +400,10 @@ Deliver a sharp agronomic trade-off evaluation (under 160 words):
 ${langLine}`;
 
     try {
-      let text = '';
-      if (GoogleGenerativeAI) {
-        const ai = new GoogleGenerativeAI(apiKey);
-        const model = ai.getGenerativeModel({ model: DEFAULT_MODEL });
-        const result = await model.generateContent(prompt);
-        text = result.response.text() || '';
-      } else {
-        text = await callGeminiRest({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          temperature: 0.5
-        });
-      }
+      const text = await callGeminiRest({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        temperature: 0.5
+      });
       return { text };
     } catch (err) {
       console.error('Gemini Resource Budget Analysis Error:', err);
