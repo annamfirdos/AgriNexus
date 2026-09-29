@@ -7,15 +7,15 @@
 <meta name="description" content="AgriNexus connects soil, water, crop, labour, machinery, harvest, storage, logistics and market into one AI platform for the whole farm.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --night:#123A26; --deep:#1A4A31; --loam:#2B2118;
+  --night:#0e2818; --deep:#143822; --loam:#2B2118;
   --sprout:#9FD45A; --wheat:#E3B45F; --rain:#7DB8C9; --clay:#C9A27E; --alarm:#C07A6A;
   --mist:#F2F7EC; --mist-2:rgba(232,236,226,.7); --mist-3:rgba(232,236,226,.45);
-  --glass:rgba(20,64,40,.5); --glass-edge:rgba(214,240,200,.22);
-  --display:'Barlow',system-ui,sans-serif;
-  --text:'Barlow',system-ui,sans-serif;
+  --glass:rgba(12,42,24,.62); --glass-edge:rgba(214,240,200,.24);
+  --display:'Plus Jakarta Sans',system-ui,sans-serif;
+  --text:'Plus Jakarta Sans',system-ui,sans-serif;
   --heading:'Instrument Serif',Georgia,serif;
   color-scheme:dark;
   box-sizing:border-box;
@@ -36,10 +36,11 @@ a{ color:inherit; }
 :focus-visible{ outline:2px solid var(--wheat); outline-offset:3px; border-radius:6px; }
 
 #gl{ position:fixed; top:0; left:0; width:100%; height:100%; display:block; z-index:0; }
-.no-gl #gl{ display:none; }
 .no-gl body, body.no-gl{ background:
-  radial-gradient(120% 80% at 70% 20%, #24382c 0%, transparent 60%),
-  radial-gradient(90% 70% at 20% 100%, #3a2b1d 0%, transparent 65%), var(--night); background-attachment:fixed; }
+  radial-gradient(120% 80% at 70% 20%, rgba(36,56,44,.6) 0%, transparent 60%),
+  url('/assets/farm-sunset.png') center/cover no-repeat,
+  url('/assets/farm-clouds.png') center/cover no-repeat,
+  var(--night); background-attachment:fixed; }
 
 .scrim{ position:fixed; inset:0; pointer-events:none; z-index:1;
   background:linear-gradient(90deg, rgba(10,48,28,.72) 0%, rgba(10,48,28,.34) 34%, rgba(10,48,28,0) 58%); transition:opacity .8s; }

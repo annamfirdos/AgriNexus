@@ -7,217 +7,259 @@
 <meta name="description" content="Plan your season, get an AI-powered crop recommendation, and ask farming questions — AgriNexus for farmers.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#fff; --ink-2:rgba(255,255,255,.9); --ink-3:rgba(255,255,255,.74); --ink-4:rgba(255,255,255,.55);
-  --line:rgba(255,255,255,.16);
-  --leaf:#B6E36B; --leaf-2:#8FCB45; --leaf-d:#1E4D22; --sun:#F2C66D; --sky:#9AD4EC; --bad:#FF9A8A; --ok:#B6E36B;
+  --ink:#ffffff; --ink-2:rgba(255,255,255,.92); --ink-3:rgba(255,255,255,.76); --ink-4:rgba(255,255,255,.55);
+  --line:rgba(255,255,255,.14);
+  --leaf:#B6E36B; --leaf-2:#8FCB45; --leaf-d:#103816; --sun:#F2C66D; --sky:#9AD4EC; --bad:#FF9A8A; --ok:#B6E36B;
   /* tints used by crop, price and advisory icon circles (set from JS) */
-  --leaf-l:rgba(182,227,107,.22); --sun-l:rgba(242,198,109,.24); --clay-l:rgba(232,150,110,.24); --sky-l:rgba(154,212,236,.22); --violet-l:rgba(190,168,255,.22); --bad-l:rgba(255,154,138,.2);
-  --glass:rgba(10,32,17,.76); --glass-2:rgba(6,22,11,.88);
-  --heading:'Instrument Serif',Georgia,serif; --text:'Barlow',system-ui,sans-serif;
+  --leaf-l:rgba(182,227,107,.24); --sun-l:rgba(242,198,109,.26); --clay-l:rgba(232,150,110,.26); --sky-l:rgba(154,212,236,.24); --violet-l:rgba(190,168,255,.24); --bad-l:rgba(255,154,138,.24);
+  --glass:rgba(10,32,17,.82); --glass-2:rgba(6,22,11,.92);
+  --heading:'Instrument Serif',Georgia,serif; --text:'Plus Jakarta Sans',system-ui,sans-serif;
   color-scheme:dark; box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --ink:#fff; } }
 :root[data-theme="dark"]{ --ink:#fff; }
 *,*::before,*::after{ box-sizing:inherit; }
-html{ scroll-padding-top:calc(70px + env(safe-area-inset-top,0px)); background:#122814; }
+html{ scroll-padding-top:calc(70px + env(safe-area-inset-top,0px)); background:#0e2412; }
 body{
   margin:0; color:var(--ink); font-family:var(--text); font-weight:400; font-size:1rem; line-height:1.55; -webkit-font-smoothing:antialiased;
-  padding-bottom:calc(86px + env(safe-area-inset-bottom,0px));
+  padding-bottom:calc(92px + env(safe-area-inset-bottom,0px));
   background:#0e2412;
 }
 h1,h2,h3{ font-family:var(--heading); font-style:italic; font-weight:400; letter-spacing:-.02em; }
 .btn,.tab,.chip,.stat b,.brand,.seg button,.qa-toggle{ font-family:var(--text); }
 a{ color:inherit; }
-:focus-visible{ outline:2px solid var(--sun); outline-offset:3px; border-radius:10px; }
+:focus-visible{ outline:2px solid var(--leaf); outline-offset:3px; border-radius:12px; }
 button{ font:inherit; color:inherit; }
-.wrap{ max-width:780px; margin:0 auto; padding:0 1rem; position:relative; z-index:2; }
+.wrap{ max-width:1180px; margin:0 auto; padding:0 1.25rem; position:relative; z-index:3; }
 ::selection{ background:var(--leaf); color:#10300f; }
 
-/* ---------- live field background ---------- */
-#field{ position:fixed; inset:0; width:100%; height:100%; z-index:0; display:block; }
+/* ---------- realistic photo background ---------- */
+#bg-photo{
+  position:fixed; inset:0; width:100%; height:100%; z-index:0;
+  background-image:url('/assets/farm-sunset.png'), url('/farm-sunset.png'), url('assets/farm-sunset.png'), url('/assets/farm-clouds.png');
+  background-position:center 30%;
+  background-size:cover;
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+  filter:brightness(0.92) contrast(1.05) saturate(1.1);
+}
+#field{ display:none; }
 .field-shade{ position:fixed; inset:0; z-index:1; pointer-events:none;
-  background:linear-gradient(180deg, rgba(6,20,10,.58) 0%, rgba(6,20,10,.22) 35%, rgba(4,14,7,.62) 100%); }
+  background:radial-gradient(circle at 50% 20%, rgba(6,22,11,.25) 0%, rgba(4,14,7,.78) 100%),
+             linear-gradient(180deg, rgba(8,26,14,.38) 0%, rgba(4,14,7,.68) 100%); }
 
 /* ---------- liquid glass surfaces ---------- */
 .card,.hero,.pick,.crop-row,.qa-card,.admin-crop,.msg.bot,header.top .topbar,nav.tabs,.toast,.lock{
-  position:relative; background:var(--glass); -webkit-backdrop-filter:blur(22px) saturate(160%); backdrop-filter:blur(22px) saturate(160%);
-  box-shadow:inset 0 1px 1px rgba(255,255,255,.18), 0 20px 45px -20px rgba(0,0,0,.6); border:1px solid rgba(255,255,255,.08);
+  position:relative; background:var(--glass); -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%);
+  box-shadow:inset 0 1px 1.5px rgba(255,255,255,.22), 0 24px 50px -20px rgba(0,0,0,.68); border:1px solid rgba(255,255,255,.11);
+  border-radius:24px;
 }
 .card::before,.hero::before,.pick::before,.crop-row::before,.qa-card::before,.admin-crop::before,.msg.bot::before,header.top .topbar::before,nav.tabs::before,.toast::before{
-  content:""; position:absolute; inset:0; border-radius:inherit; padding:1.3px; pointer-events:none;
-  background:linear-gradient(180deg, rgba(255,255,255,.5) 0%, rgba(255,255,255,.16) 22%, rgba(255,255,255,0) 42%, rgba(255,255,255,0) 60%, rgba(255,255,255,.14) 80%, rgba(255,255,255,.42) 100%);
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1.2px; pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.18) 25%, rgba(255,255,255,0) 45%, rgba(255,255,255,0) 65%, rgba(255,255,255,.14) 85%, rgba(255,255,255,.45) 100%);
   -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude;
 }
 
 /* ---------- header ---------- */
-header.top{ position:sticky; top:0; z-index:30; padding:calc(env(safe-area-inset-top,0px) + 10px) .8rem .6rem; background:linear-gradient(180deg, rgba(14,44,24,.94) 0%, rgba(14,44,24,.8) 55%, rgba(14,44,24,0) 100%); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); -webkit-mask-image:linear-gradient(180deg,#000 80%,transparent); mask-image:linear-gradient(180deg,#000 80%,transparent); }
-.topbar{ display:flex; align-items:center; justify-content:space-between; padding:.55rem .65rem .55rem 1rem; max-width:780px; margin:0 auto; border-radius:999px; }
-.brand{ display:flex; align-items:center; gap:.5rem; font-family:var(--heading); font-style:italic; font-size:1.45rem; letter-spacing:-.02em; text-decoration:none; color:#fff; }
-.brand svg{ width:26px; height:26px; }
-.who{ display:flex; align-items:center; gap:.5rem; font-size:.85rem; color:var(--ink-3); font-weight:500; }
-.who img{ width:28px; height:28px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.35); }
-#langSel{ font:inherit; font-size:.8rem; font-weight:600; color:#1E4D22; background:#fff; border:none; border-radius:999px; padding:.42rem .75rem; cursor:pointer; }
+header.top{ position:sticky; top:0; z-index:30; padding:calc(env(safe-area-inset-top,0px) + 10px) .8rem .6rem; background:linear-gradient(180deg, rgba(10,32,17,.96) 0%, rgba(10,32,17,.82) 55%, rgba(10,32,17,0) 100%); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); -webkit-mask-image:linear-gradient(180deg,#000 82%,transparent); mask-image:linear-gradient(180deg,#000 82%,transparent); }
+.topbar{ display:flex; align-items:center; justify-content:space-between; padding:.55rem .85rem .55rem 1.2rem; max-width:1180px; margin:0 auto; border-radius:999px; }
+.brand{ display:flex; align-items:center; gap:.55rem; font-family:var(--heading); font-style:italic; font-size:1.55rem; letter-spacing:-.02em; text-decoration:none; color:#fff; }
+.brand svg{ width:28px; height:28px; filter:drop-shadow(0 2px 6px rgba(62,143,62,.4)); }
+.who{ display:flex; align-items:center; gap:.55rem; font-size:.86rem; color:var(--ink-3); font-weight:600; }
+.who img{ width:30px; height:30px; border-radius:50%; box-shadow:0 0 0 2px rgba(182,227,107,.5); }
+#langSel{ font:inherit; font-size:.82rem; font-weight:700; color:#103816; background:#fff; border:none; border-radius:999px; padding:.45rem .85rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.3); }
 
-/* ---------- bottom tabs ---------- */
-nav.tabs{ position:fixed; left:.7rem; right:.7rem; bottom:calc(env(safe-area-inset-bottom,0px) + .6rem); z-index:30; display:flex; gap:.2rem; padding:.35rem; border-radius:24px; max-width:640px; margin:0 auto; }
-.tab{ flex:1; display:flex; flex-direction:column; align-items:center; gap:.15rem; padding:.5rem 0 .45rem; background:none; border:none; border-radius:18px; color:var(--ink-3); font-size:.72rem; font-weight:600; cursor:pointer; transition:background .2s, color .2s; }
-.tab .ic{ font-size:1.25rem; line-height:1; transition:transform .2s; }
-.tab.on{ color:#1E4D22; background:#fff; }
-.tab.on .ic{ transform:scale(1.1); }
-.tab:active{ transform:scale(.95); }
+/* ---------- bottom tabs (floating dock) ---------- */
+nav.tabs{ 
+  position:fixed; left:.5rem; right:.5rem; bottom:calc(env(safe-area-inset-bottom,0px) + .5rem); 
+  z-index:30; display:flex; gap:.35rem; padding:.45rem .6rem; border-radius:28px; 
+  max-width:880px; margin:0 auto; 
+  background:rgba(8,26,14,.92); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,.14); box-shadow:0 20px 48px -12px rgba(0,0,0,.75), inset 0 1px 1px rgba(255,255,255,.2);
+  overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+nav.tabs::-webkit-scrollbar{ display:none; }
+.tab{ 
+  flex:1; min-width:4.2rem; display:flex; flex-direction:column; align-items:center; gap:.15rem; 
+  padding:.45rem .35rem .4rem; background:none; border:none; border-radius:18px; 
+  color:var(--ink-3); font-size:.76rem; font-weight:600; cursor:pointer; 
+  transition:all .2s cubic-bezier(.4,0,.2,1); white-space:nowrap;
+}
+.tab .ic{ font-size:1.35rem; line-height:1; transition:transform .2s; }
+.tab:hover{ color:#fff; background:rgba(255,255,255,.08); }
+.tab.on{ color:#103816; background:#fff; box-shadow:0 4px 16px rgba(0,0,0,.4); }
+.tab.on .ic{ transform:scale(1.15); }
+.tab:active{ transform:scale(.92); }
 .tab[hidden]{ display:none; }
 
-main{ padding-top:1.1rem; }
+main{ padding-top:1.2rem; }
 .panel{ display:none; }
-.panel.on{ display:block; animation:rise .45s ease-out; }
-@keyframes rise{ from{ opacity:0; transform:translateY(14px); filter:blur(6px);} to{ opacity:1; transform:none; filter:blur(0);} }
+.panel.on{ display:block; animation:rise .45s cubic-bezier(.16,1,.3,1); }
+@keyframes rise{ from{ opacity:0; transform:translateY(16px); filter:blur(8px);} to{ opacity:1; transform:none; filter:blur(0);} }
+
+/* ---------- desktop responsive multi-column layout ---------- */
+.panel-grid-2{ display:grid; grid-template-columns:1fr; gap:1.2rem; }
+.panel-grid-3{ display:grid; grid-template-columns:1fr; gap:1.2rem; }
+@media (min-width: 860px){
+  .panel-grid-2{ grid-template-columns:1fr 1fr; align-items:start; }
+  .panel-grid-2 .span-full{ grid-column:1 / -1; }
+  .panel-grid-3{ grid-template-columns:repeat(3, 1fr); align-items:start; }
+  .panel-grid-3 .span-2{ grid-column:span 2; }
+  .panel-grid-3 .span-full{ grid-column:1 / -1; }
+  .chat-wrap{ max-width:860px; margin:0 auto; }
+}
 
 /* ---------- hero ---------- */
-.hero{ border-radius:28px; padding:1.7rem 1.5rem 1.6rem; margin-bottom:1rem; background:linear-gradient(160deg, rgba(60,110,40,.62), rgba(8,34,16,.62) 60%); }
-.hero h1{ margin:0 0 .6rem; font-size:clamp(2.3rem,7vw,3.2rem); line-height:.95; letter-spacing:-.035em; }
-.hero p{ margin:0; color:var(--ink-2); font-size:1rem; max-width:32rem; font-weight:300; }
-.hero .btn{ margin-top:1.2rem; }
+.hero{ border-radius:28px; padding:2rem 1.8rem 1.9rem; margin-bottom:1.2rem; background:linear-gradient(160deg, rgba(65,125,45,.68), rgba(8,34,16,.68) 60%); }
+.hero h1{ margin:0 0 .65rem; font-size:clamp(2.4rem,6vw,3.6rem); line-height:.95; letter-spacing:-.035em; }
+.hero p{ margin:0; color:var(--ink-2); font-size:1.05rem; max-width:44rem; font-weight:400; line-height:1.55; }
+.hero .btn{ margin-top:1.3rem; }
 
 /* ---------- cards ---------- */
-.card{ border-radius:24px; padding:1.25rem 1.3rem; margin-bottom:1rem; }
-.card h2{ margin:0 0 .25rem; font-size:1.75rem; line-height:1.05; display:flex; align-items:center; gap:.55rem; }
-.card .sub{ margin:0 0 1.05rem; color:var(--ink-3); font-size:.92rem; font-weight:300; }
+.card{ border-radius:24px; padding:1.4rem 1.5rem; margin-bottom:1.2rem; transition:transform .2s ease, box-shadow .2s ease; }
+.card h2{ margin:0 0 .3rem; font-size:1.85rem; line-height:1.05; display:flex; align-items:center; gap:.6rem; }
+.card .sub{ margin:0 0 1.15rem; color:var(--ink-3); font-size:.94rem; font-weight:400; }
 
 /* ---------- buttons ---------- */
-.btn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border:none; border-radius:999px; padding:.85rem 1.35rem; font-weight:600; font-size:.97rem; cursor:pointer; text-decoration:none; transition:transform .15s, background .2s, opacity .2s; }
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:.55rem; border:none; border-radius:999px; padding:.9rem 1.45rem; font-weight:700; font-size:.98rem; cursor:pointer; text-decoration:none; transition:transform .15s, background .2s, box-shadow .2s, opacity .2s; }
 .btn:active{ transform:scale(.96); }
-.btn.primary,.btn.solid{ background:#fff; color:#1E4D22; box-shadow:0 10px 24px -12px rgba(0,0,0,.5); }
-.btn.solid:hover,.btn.primary:hover{ background:#F2FAE6; }
-.btn.ghost{ background:rgba(182,227,107,.2); color:#fff; box-shadow:inset 0 0 0 1px rgba(182,227,107,.45); }
-.btn.outline{ background:rgba(255,255,255,.06); color:#fff; box-shadow:inset 0 0 0 1px rgba(255,255,255,.3); }
+.btn.primary,.btn.solid{ background:#fff; color:#103816; box-shadow:0 12px 28px -12px rgba(0,0,0,.6); }
+.btn.solid:hover,.btn.primary:hover{ background:#F2FAE6; transform:translateY(-1px); box-shadow:0 14px 32px -12px rgba(0,0,0,.7); }
+.btn.ghost{ background:rgba(182,227,107,.22); color:#fff; box-shadow:inset 0 0 0 1.5px rgba(182,227,107,.5); }
+.btn.ghost:hover{ background:rgba(182,227,107,.32); }
+.btn.outline{ background:rgba(255,255,255,.08); color:#fff; box-shadow:inset 0 0 0 1px rgba(255,255,255,.32); }
+.btn.outline:hover{ background:rgba(255,255,255,.14); }
 .btn.block{ width:100%; }
-.btn.small{ padding:.55rem .95rem; font-size:.85rem; }
+.btn.small{ padding:.58rem 1rem; font-size:.86rem; }
 .btn[disabled]{ opacity:.5; cursor:not-allowed; }
 
 /* ---------- form ---------- */
-.field{ margin-bottom:1.2rem; }
+.field{ margin-bottom:1.25rem; }
 .field:last-child{ margin-bottom:0; }
-.field label{ display:flex; justify-content:space-between; gap:1rem; font-size:.92rem; font-weight:500; margin-bottom:.45rem; color:var(--ink-2); }
-.field label span.v{ font-family:var(--heading); font-style:italic; font-size:1.35rem; line-height:1; color:#fff; font-variant-numeric:tabular-nums; }
-.field .hint{ font-size:.8rem; color:var(--ink-3); margin-top:.3rem; }
-input[type=text],input[type=number],select,textarea{ width:100%; padding:.8rem .95rem; border:none; border-radius:16px; font:inherit; font-size:.98rem; background:rgba(255,255,255,.1); color:#fff; box-shadow:inset 0 0 0 1px rgba(255,255,255,.2); transition:box-shadow .2s, background .2s; }
+.field label{ display:flex; justify-content:space-between; align-items:center; gap:1rem; font-size:.94rem; font-weight:600; margin-bottom:.5rem; color:var(--ink-2); }
+.field label span.v{ font-family:var(--heading); font-style:italic; font-size:1.45rem; line-height:1; color:#fff; font-variant-numeric:tabular-nums; }
+.field .hint{ font-size:.82rem; color:var(--ink-3); margin-top:.35rem; }
+input[type=text],input[type=number],select,textarea{ width:100%; padding:.85rem 1rem; border:none; border-radius:18px; font:inherit; font-size:.98rem; background:rgba(255,255,255,.11); color:#fff; box-shadow:inset 0 0 0 1px rgba(255,255,255,.24); transition:box-shadow .2s, background .2s; }
 input::placeholder,textarea::placeholder{ color:rgba(255,255,255,.5); }
-select option{ color:#10300f; }
-textarea{ resize:vertical; min-height:5rem; }
-input:focus,select:focus,textarea:focus{ outline:none; background:rgba(255,255,255,.14); box-shadow:inset 0 0 0 1.5px var(--leaf), 0 0 0 4px rgba(182,227,107,.2); }
-input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:30px; background:transparent; box-shadow:none; padding:0; }
-input[type=range]::-webkit-slider-runnable-track{ height:5px; border-radius:5px; background:linear-gradient(90deg,#fff 0 var(--p,50%), rgba(255,255,255,.2) var(--p,50%) 100%); }
-input[type=range]::-moz-range-track{ height:5px; border-radius:5px; background:rgba(255,255,255,.2); }
-input[type=range]::-moz-range-progress{ height:5px; border-radius:5px; background:#fff; }
-input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:24px; height:24px; margin-top:-9.5px; border-radius:50%; background:#fff; box-shadow:0 0 0 6px rgba(182,227,107,.35), 0 4px 10px rgba(0,0,0,.3); }
-input[type=range]::-moz-range-thumb{ width:22px; height:22px; border:none; border-radius:50%; background:#fff; }
-.presets{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.65rem; }
-.chip{ padding:.45rem .9rem; border-radius:999px; border:none; background:rgba(255,255,255,.1); box-shadow:inset 0 0 0 1px rgba(255,255,255,.22); font-size:.84rem; font-weight:500; cursor:pointer; color:#fff; transition:background .2s, color .2s; }
-.chip:hover{ background:rgba(255,255,255,.18); }
-.chip.on{ background:#fff; color:#1E4D22; box-shadow:none; }
-.check{ display:flex; align-items:flex-start; gap:.6rem; font-size:.9rem; color:var(--ink-2); padding:.2rem 0; }
-.check input{ margin-top:.2rem; width:1.15rem; height:1.15rem; accent-color:var(--leaf); }
+select option{ color:#10300f; background:#fff; }
+textarea{ resize:vertical; min-height:5.2rem; }
+input:focus,select:focus,textarea:focus{ outline:none; background:rgba(255,255,255,.16); box-shadow:inset 0 0 0 1.5px var(--leaf), 0 0 0 4px rgba(182,227,107,.25); }
+input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:32px; background:transparent; box-shadow:none; padding:0; }
+input[type=range]::-webkit-slider-runnable-track{ height:6px; border-radius:6px; background:linear-gradient(90deg,var(--leaf) 0 var(--p,50%), rgba(255,255,255,.22) var(--p,50%) 100%); }
+input[type=range]::-moz-range-track{ height:6px; border-radius:6px; background:rgba(255,255,255,.22); }
+input[type=range]::-moz-range-progress{ height:6px; border-radius:6px; background:var(--leaf); }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:26px; height:26px; margin-top:-10px; border-radius:50%; background:#fff; box-shadow:0 0 0 6px rgba(182,227,107,.4), 0 4px 12px rgba(0,0,0,.45); cursor:pointer; }
+input[type=range]::-moz-range-thumb{ width:24px; height:24px; border:none; border-radius:50%; background:#fff; cursor:pointer; }
+.presets{ display:flex; gap:.55rem; flex-wrap:wrap; margin-top:.7rem; }
+.chip{ padding:.48rem .95rem; border-radius:999px; border:none; background:rgba(255,255,255,.11); box-shadow:inset 0 0 0 1px rgba(255,255,255,.24); font-size:.85rem; font-weight:600; cursor:pointer; color:#fff; transition:all .2s; }
+.chip:hover{ background:rgba(255,255,255,.2); transform:translateY(-1px); }
+.chip.on{ background:#fff; color:#103816; box-shadow:0 4px 14px rgba(0,0,0,.3); }
+.check{ display:flex; align-items:flex-start; gap:.65rem; font-size:.92rem; color:var(--ink-2); padding:.25rem 0; }
+.check input{ margin-top:.2rem; width:1.2rem; height:1.2rem; accent-color:var(--leaf); }
 
 /* ---------- results ---------- */
 .result{ display:none; }
 .result.on{ display:block; }
-.pick{ border-radius:24px; padding:1.3rem 1.35rem; margin-bottom:1rem; background:linear-gradient(160deg, rgba(70,125,45,.66), rgba(8,34,16,.62) 70%); }
-.pick .tag{ font-size:.82rem; font-weight:500; color:var(--leaf); }
-.pick h3{ margin:.25rem 0 .5rem; font-size:2.6rem; line-height:1; display:flex; align-items:center; gap:.5rem; }
-.pick p{ margin:0; color:var(--ink-2); font-size:.97rem; font-weight:300; }
-.crops{ display:grid; gap:.7rem; }
-.crop-row{ border-radius:20px; padding:.95rem 1rem; display:grid; gap:.6rem; background:rgba(255,255,255,.05); -webkit-backdrop-filter:none; backdrop-filter:none; box-shadow:inset 0 1px 1px rgba(255,255,255,.1); }
-.crop-row.best{ background:rgba(182,227,107,.16); }
+.pick{ border-radius:24px; padding:1.4rem 1.45rem; margin-bottom:1.1rem; background:linear-gradient(160deg, rgba(75,135,50,.72), rgba(8,34,16,.68) 70%); }
+.pick .tag{ font-size:.84rem; font-weight:700; color:var(--leaf); }
+.pick h3{ margin:.25rem 0 .5rem; font-size:2.8rem; line-height:1; display:flex; align-items:center; gap:.6rem; }
+.pick p{ margin:0; color:var(--ink-2); font-size:1rem; font-weight:400; }
+.crops{ display:grid; gap:.75rem; }
+.crop-row{ border-radius:22px; padding:1.05rem 1.15rem; display:grid; gap:.65rem; background:rgba(255,255,255,.06); -webkit-backdrop-filter:none; backdrop-filter:none; box-shadow:inset 0 1px 1px rgba(255,255,255,.12); transition:transform .2s; }
+.crop-row:hover{ transform:translateY(-2px); }
+.crop-row.best{ background:rgba(182,227,107,.18); box-shadow:inset 0 0 0 1.5px rgba(182,227,107,.45); }
 .crop-row .hd{ display:flex; align-items:center; justify-content:space-between; }
-.crop-row .name{ font-family:var(--heading); font-style:italic; font-size:1.5rem; display:flex; align-items:center; gap:.55rem; }
-.ico{ width:2rem; height:2rem; border-radius:50%; display:inline-grid; place-items:center; font-size:1.05rem; flex:none; font-style:normal; }
-.crop-row .badge{ font-size:.72rem; font-weight:600; padding:.25rem .65rem; border-radius:999px; background:#fff; color:#1E4D22; }
-.stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; }
-.stat{ background:rgba(0,0,0,.18); border-radius:14px; padding:.6rem .5rem; text-align:center; }
-.stat b{ display:block; font-family:var(--heading); font-style:italic; font-weight:400; font-size:1.3rem; line-height:1.1; }
-.stat span{ font-size:.7rem; color:var(--ink-3); }
+.crop-row .name{ font-family:var(--heading); font-style:italic; font-size:1.6rem; display:flex; align-items:center; gap:.6rem; }
+.ico{ width:2.2rem; height:2.2rem; border-radius:50%; display:inline-grid; place-items:center; font-size:1.15rem; flex:none; font-style:normal; }
+.crop-row .badge{ font-size:.74rem; font-weight:700; padding:.28rem .75rem; border-radius:999px; background:#fff; color:#103816; box-shadow:0 2px 8px rgba(0,0,0,.25); }
+.stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:.55rem; }
+.stat{ background:rgba(0,0,0,.22); border-radius:16px; padding:.7rem .6rem; text-align:center; box-shadow:inset 0 1px 1px rgba(255,255,255,.06); }
+.stat b{ display:block; font-family:var(--heading); font-style:italic; font-weight:400; font-size:1.35rem; line-height:1.1; }
+.stat span{ font-size:.72rem; color:var(--ink-3); font-weight:500; }
 .risk-lo{ color:var(--leaf); } .risk-md{ color:var(--sun); } .risk-hi{ color:var(--bad); }
 
 /* ---------- advisories + prices ---------- */
-.adv{ display:flex; gap:.8rem; align-items:flex-start; padding:.85rem 0; border-bottom:1px solid var(--line); font-weight:300; }
+.adv{ display:flex; gap:.85rem; align-items:flex-start; padding:.95rem 0; border-bottom:1px solid var(--line); font-weight:400; }
 .adv:last-child{ border-bottom:none; }
-.adv .ic{ font-size:1.2rem; width:2.4rem; height:2.4rem; border-radius:50%; display:grid; place-items:center; flex:none; }
-.adv b{ display:block; font-size:.78rem; font-weight:600; color:var(--leaf); margin-bottom:.15rem; }
-.adv time{ display:block; font-size:.74rem; color:var(--ink-4); margin-top:.25rem; }
-.price-tbl{ width:100%; border-collapse:separate; border-spacing:0 .5rem; font-size:.95rem; margin-top:-.3rem; }
-.price-tbl td{ padding:.65rem .5rem; background:rgba(255,255,255,.06); }
-.price-tbl tr td:first-child{ border-radius:16px 0 0 16px; display:flex; align-items:center; gap:.65rem; font-weight:500; }
-.price-tbl tr td:last-child{ border-radius:0 16px 16px 0; }
-.price-tbl .swatch{ width:2.1rem; height:2.1rem; border-radius:50%; display:grid; place-items:center; font-size:1.05rem; flex:none; }
-.price-tbl td.p{ text-align:right; font-family:var(--heading); font-style:italic; font-size:1.35rem; padding-right:1rem; }
-.empty{ color:var(--ink-3); font-size:.92rem; text-align:center; padding:1.2rem 0; font-weight:300; }
+.adv .ic{ font-size:1.3rem; width:2.6rem; height:2.6rem; border-radius:50%; display:grid; place-items:center; flex:none; }
+.adv b{ display:block; font-size:.82rem; font-weight:700; color:var(--leaf); margin-bottom:.2rem; }
+.adv time{ display:block; font-size:.76rem; color:var(--ink-4); margin-top:.3rem; }
+.price-tbl{ width:100%; border-collapse:separate; border-spacing:0 .55rem; font-size:.96rem; margin-top:-.3rem; }
+.price-tbl td{ padding:.75rem .6rem; background:rgba(255,255,255,.07); }
+.price-tbl tr td:first-child{ border-radius:18px 0 0 18px; display:flex; align-items:center; gap:.7rem; font-weight:600; }
+.price-tbl tr td:last-child{ border-radius:0 18px 18px 0; }
+.price-tbl .swatch{ width:2.3rem; height:2.3rem; border-radius:50%; display:grid; place-items:center; font-size:1.15rem; flex:none; }
+.price-tbl td.p{ text-align:right; font-family:var(--heading); font-style:italic; font-size:1.45rem; padding-right:1.1rem; }
+.empty{ color:var(--ink-3); font-size:.95rem; text-align:center; padding:1.4rem 0; font-weight:400; }
 
 /* ---------- saved plans ---------- */
-.plan-row{ display:flex; align-items:center; justify-content:space-between; gap:.7rem; padding:.8rem 0; border-top:1px solid var(--line); }
-.plan-row .meta{ font-size:.84rem; color:var(--ink-3); }
-.plan-row .name{ font-family:var(--heading); font-style:italic; font-size:1.3rem; }
-.plan-row .x{ background:rgba(255,154,138,.18); border:none; color:var(--bad); font-size:.9rem; cursor:pointer; padding:.35rem .65rem; border-radius:999px; }
+.plan-row{ display:flex; align-items:center; justify-content:space-between; gap:.8rem; padding:.9rem 0; border-top:1px solid var(--line); }
+.plan-row .meta{ font-size:.86rem; color:var(--ink-3); }
+.plan-row .name{ font-family:var(--heading); font-style:italic; font-size:1.4rem; }
+.plan-row .x{ background:rgba(255,154,138,.2); border:none; color:var(--bad); font-size:.92rem; cursor:pointer; padding:.4rem .75rem; border-radius:999px; }
 
 /* ---------- chat ---------- */
-.chat-wrap{ display:flex; flex-direction:column; height:calc(100dvh - 70px - 90px - 2.2rem); min-height:22rem; }
-.chat-scroll{ flex:1; overflow-y:auto; padding:.3rem .1rem 1rem; }
-.msg{ max-width:86%; padding:.8rem 1rem; border-radius:20px; margin-bottom:.65rem; font-size:.95rem; line-height:1.55; white-space:pre-wrap; }
-.msg.user{ background:#fff; color:#15361a; margin-left:auto; border-bottom-right-radius:6px; box-shadow:0 10px 22px -14px rgba(0,0,0,.5); }
-.msg.bot{ margin-right:auto; border-bottom-left-radius:6px; background:rgba(8,34,16,.58); }
+.chat-wrap{ display:flex; flex-direction:column; height:calc(100dvh - 70px - 90px - 2.2rem); min-height:24rem; }
+.chat-scroll{ flex:1; overflow-y:auto; padding:.4rem .1rem 1rem; }
+.msg{ max-width:88%; padding:.9rem 1.15rem; border-radius:22px; margin-bottom:.8rem; font-size:.96rem; line-height:1.6; }
+.msg.user{ background:#fff; color:#103816; font-weight:500; margin-left:auto; border-bottom-right-radius:6px; box-shadow:0 12px 28px -14px rgba(0,0,0,.55); }
+.msg.bot{ margin-right:auto; border-bottom-left-radius:6px; background:rgba(10,32,17,.88); border:1px solid rgba(255,255,255,.12); box-shadow:0 14px 30px -16px rgba(0,0,0,.5); }
 .msg.bot.thinking{ color:var(--ink-3); font-style:italic; }
-.chips-row{ display:flex; gap:.5rem; overflow-x:auto; padding:.2rem .1rem .8rem; }
+.chips-row{ display:flex; gap:.55rem; overflow-x:auto; padding:.25rem .1rem .9rem; scrollbar-width:none; }
+.chips-row::-webkit-scrollbar{ display:none; }
 .chips-row .chip{ white-space:nowrap; flex:none; }
-.chat-input{ display:flex; gap:.5rem; padding:.55rem; border-radius:26px; background:var(--glass-2); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); box-shadow:inset 0 0 0 1px rgba(255,255,255,.18); }
-.chat-input textarea{ flex:1; min-height:2.8rem; max-height:7rem; border-radius:20px; background:transparent; box-shadow:none; resize:none; }
-.chat-input textarea:focus{ box-shadow:none; background:rgba(255,255,255,.06); }
-.chat-input button[type=submit]{ flex:none; width:2.9rem; height:2.9rem; align-self:flex-end; border-radius:50%; background:#fff; color:#1E4D22; border:none; font-size:1.1rem; cursor:pointer; }
+.chat-input{ display:flex; gap:.6rem; padding:.6rem; border-radius:28px; background:var(--glass-2); -webkit-backdrop-filter:blur(22px); backdrop-filter:blur(22px); box-shadow:inset 0 0 0 1px rgba(255,255,255,.2); }
+.chat-input textarea{ flex:1; min-height:2.9rem; max-height:7rem; border-radius:20px; background:transparent; box-shadow:none; resize:none; font-size:.98rem; }
+.chat-input textarea:focus{ box-shadow:none; background:rgba(255,255,255,.07); }
+.chat-input button[type=submit]{ flex:none; width:3.1rem; height:3.1rem; align-self:flex-end; border-radius:50%; background:#fff; color:#103816; border:none; font-size:1.2rem; cursor:pointer; font-weight:700; box-shadow:0 6px 16px rgba(0,0,0,.35); transition:transform .15s; }
+.chat-input button[type=submit]:active{ transform:scale(.92); }
 .chat-input button[disabled]{ opacity:.5; }
-.chat-input .attach{ flex:none; width:2.9rem; height:2.9rem; align-self:flex-end; border-radius:50%; background:rgba(242,198,109,.25); border:none; font-size:1.1rem; cursor:pointer; }
-.msg img.shot{ max-width:100%; border-radius:14px; margin-bottom:.5rem; display:block; }
-.note-box{ background:rgba(154,212,236,.16); box-shadow:inset 0 0 0 1px rgba(154,212,236,.35); border-radius:16px; padding:.8rem 1rem; font-size:.88rem; color:#fff; margin-bottom:1rem; font-weight:300; }
-.note-box.warn{ background:rgba(242,198,109,.18); box-shadow:inset 0 0 0 1px rgba(242,198,109,.4); }
-.note-box.bad{ background:rgba(255,154,138,.16); box-shadow:inset 0 0 0 1px rgba(255,154,138,.4); }
+.chat-input .attach{ flex:none; width:3.1rem; height:3.1rem; align-self:flex-end; border-radius:50%; background:rgba(242,198,109,.28); border:none; font-size:1.2rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.25); }
+.msg img.shot{ max-width:100%; border-radius:16px; margin-bottom:.6rem; display:block; box-shadow:0 6px 18px rgba(0,0,0,.4); }
+.note-box{ background:rgba(154,212,236,.18); box-shadow:inset 0 0 0 1px rgba(154,212,236,.38); border-radius:18px; padding:.9rem 1.1rem; font-size:.9rem; color:#fff; margin-bottom:1rem; font-weight:400; line-height:1.5; }
+.note-box.warn{ background:rgba(242,198,109,.2); box-shadow:inset 0 0 0 1px rgba(242,198,109,.45); }
+.note-box.bad{ background:rgba(255,154,138,.18); box-shadow:inset 0 0 0 1px rgba(255,154,138,.45); }
 
 /* ---------- farmer network ---------- */
-.qa-card{ border-radius:22px; padding:1.05rem 1.15rem; margin-bottom:.8rem; }
-.qa-card .q{ font-size:1.02rem; font-weight:500; margin-bottom:.25rem; }
-.qa-card .meta{ font-size:.76rem; color:var(--ink-4); margin-bottom:.6rem; }
-.qa-replies{ display:none; border-top:1px dashed var(--line); margin-top:.7rem; padding-top:.7rem; }
+.qa-card{ border-radius:22px; padding:1.15rem 1.25rem; margin-bottom:.9rem; }
+.qa-card .q{ font-size:1.06rem; font-weight:600; margin-bottom:.3rem; }
+.qa-card .meta{ font-size:.78rem; color:var(--ink-4); margin-bottom:.65rem; }
+.qa-replies{ display:none; border-top:1px dashed var(--line); margin-top:.75rem; padding-top:.75rem; }
 .qa-replies.on{ display:block; }
-.qa-reply{ font-size:.9rem; padding:.45rem 0; border-top:1px solid var(--line); font-weight:300; }
+.qa-reply{ font-size:.92rem; padding:.5rem 0; border-top:1px solid var(--line); font-weight:400; }
 .qa-reply:first-child{ border-top:none; }
 .qa-reply .meta{ margin-bottom:0; }
-.qa-reply-form{ display:flex; gap:.5rem; margin-top:.6rem; }
+.qa-reply-form{ display:flex; gap:.55rem; margin-top:.65rem; }
 .qa-reply-form input{ flex:1; }
-.qa-toggle{ background:rgba(255,255,255,.1); border:none; color:#fff; font-weight:500; font-size:.82rem; cursor:pointer; padding:.42rem .85rem; border-radius:999px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.2); }
+.qa-toggle{ background:rgba(255,255,255,.11); border:none; color:#fff; font-weight:600; font-size:.84rem; cursor:pointer; padding:.45rem .95rem; border-radius:999px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.24); }
 
 /* ---------- admin ---------- */
-.lock{ text-align:center; padding:2.6rem 1.2rem; color:var(--ink-2); border-radius:24px; }
-.lock .ic{ font-size:2.5rem; display:block; margin-bottom:.6rem; }
-.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:.8rem; }
-.admin-crop{ border-radius:20px; padding:1rem 1.1rem; margin-bottom:.9rem; background:rgba(255,255,255,.05); -webkit-backdrop-filter:none; backdrop-filter:none; }
-.admin-crop h3{ margin:0 0 .75rem; font-size:1.5rem; display:flex; align-items:center; gap:.5rem; }
-.mini{ font-size:.76rem; color:var(--ink-3); margin-top:.25rem; }
-.bar-row{ display:grid; grid-template-columns:6.2rem 1fr 2.6rem; align-items:center; gap:.6rem; margin-bottom:.55rem; font-size:.88rem; }
-.bar-row .track{ height:8px; border-radius:6px; background:rgba(255,255,255,.14); overflow:hidden; }
-.bar-row .fill{ height:100%; background:linear-gradient(90deg,var(--leaf),var(--sun)); border-radius:6px; }
-.seg{ display:flex; gap:.4rem; margin-bottom:1rem; flex-wrap:wrap; }
-.seg button{ padding:.45rem .9rem; border-radius:999px; border:none; background:rgba(255,255,255,.1); box-shadow:inset 0 0 0 1px rgba(255,255,255,.22); color:#fff; font-weight:500; font-size:.84rem; cursor:pointer; }
-.seg button.on{ background:#fff; color:#1E4D22; box-shadow:none; }
-.adv-item{ display:flex; justify-content:space-between; gap:.6rem; padding:.65rem 0; border-top:1px solid var(--line); font-size:.9rem; font-weight:300; }
-.adv-item .x{ background:rgba(255,154,138,.18); border:none; color:var(--bad); cursor:pointer; font-size:.8rem; border-radius:999px; padding:.3rem .65rem; flex:none; }
+.lock{ text-align:center; padding:2.8rem 1.4rem; color:var(--ink-2); border-radius:24px; }
+.lock .ic{ font-size:2.8rem; display:block; margin-bottom:.7rem; }
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:.85rem; }
+.admin-crop{ border-radius:22px; padding:1.1rem 1.2rem; margin-bottom:1rem; background:rgba(255,255,255,.06); -webkit-backdrop-filter:none; backdrop-filter:none; }
+.admin-crop h3{ margin:0 0 .8rem; font-size:1.55rem; display:flex; align-items:center; gap:.55rem; }
+.mini{ font-size:.78rem; color:var(--ink-3); margin-top:.3rem; font-weight:500; }
+.bar-row{ display:grid; grid-template-columns:6.4rem 1fr 2.8rem; align-items:center; gap:.65rem; margin-bottom:.6rem; font-size:.9rem; }
+.bar-row .track{ height:9px; border-radius:8px; background:rgba(255,255,255,.16); overflow:hidden; }
+.bar-row .fill{ height:100%; background:linear-gradient(90deg,var(--leaf),var(--sun)); border-radius:8px; }
+.seg{ display:flex; gap:.45rem; margin-bottom:1.1rem; flex-wrap:wrap; }
+.seg button{ padding:.5rem .95rem; border-radius:999px; border:none; background:rgba(255,255,255,.11); box-shadow:inset 0 0 0 1px rgba(255,255,255,.24); color:#fff; font-weight:600; font-size:.86rem; cursor:pointer; transition:all .2s; }
+.seg button:hover{ background:rgba(255,255,255,.18); }
+.seg button.on{ background:#fff; color:#103816; box-shadow:0 4px 12px rgba(0,0,0,.3); }
+.adv-item{ display:flex; justify-content:space-between; gap:.65rem; padding:.75rem 0; border-top:1px solid var(--line); font-size:.92rem; font-weight:400; }
+.adv-item .x{ background:rgba(255,154,138,.2); border:none; color:var(--bad); cursor:pointer; font-size:.82rem; border-radius:999px; padding:.35rem .7rem; flex:none; }
 
 /* ---------- toast ---------- */
-.toast{ position:fixed; left:50%; bottom:calc(104px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%) translateY(20px); color:#fff; padding:.75rem 1.3rem; border-radius:999px; font-size:.9rem; font-weight:500; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; z-index:50; background:rgba(8,34,16,.8); }
+.toast{ position:fixed; left:50%; bottom:calc(108px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%) translateY(20px); color:#fff; padding:.8rem 1.4rem; border-radius:999px; font-size:.92rem; font-weight:600; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; z-index:50; background:rgba(8,26,14,.92); box-shadow:0 12px 32px rgba(0,0,0,.6); border:1px solid rgba(255,255,255,.2); }
 .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-
 /* ---------- crop doctor ---------- */
-.doc-hero{ background:linear-gradient(160deg, rgba(242,198,109,.34), rgba(8,34,16,.6) 65%); }
-.shots{ display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem; margin:.2rem 0 1rem; }
+.doc-hero{ background:linear-gradient(160deg, rgba(242,198,109,.38), rgba(8,34,16,.65) 65%); }
+.shots{ display:grid; grid-template-columns:repeat(3,1fr); gap:.65rem; margin:.25rem 0 1.1rem; }
 .shot-slot{ position:relative; aspect-ratio:1; border-radius:18px; overflow:hidden; background:rgba(255,255,255,.07); box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.2); display:grid; place-items:center; color:var(--ink-4); font-size:1.6rem; }
 .shot-slot.empty{ border:none; background:repeating-linear-gradient(135deg, rgba(255,255,255,.04) 0 8px, rgba(255,255,255,.07) 8px 16px); }
 .shot-slot img{ width:100%; height:100%; object-fit:cover; display:block; }
@@ -545,6 +587,7 @@ nav.tabs::-webkit-scrollbar{ display:none; }
   </div>
 </div>
 
+<div id="bg-photo" aria-hidden="true"></div>
 <canvas id="field" aria-hidden="true"></canvas>
 <div class="field-shade"></div>
 
@@ -577,39 +620,41 @@ nav.tabs::-webkit-scrollbar{ display:none; }
     </div>
 
     <div class="card notice" id="noticeCard" hidden></div>
-
     <div class="card" id="homeJourney" hidden></div>
 
-    <div class="card doc-hero">
-      <h2>📷 <span data-i18n="docCardH">Crop Doctor</span></h2>
-      <p class="sub" data-i18n="docCardP">Something wrong with your crop? Take a photo and the AI will tell you what it sees and what to do next.</p>
-      <button class="btn solid block" data-goto="doctor" data-i18n="docCardBtn">Check my crop with a photo</button>
-    </div>
+    <div class="panel-grid-2">
+      <div class="card doc-hero">
+        <h2>📷 <span data-i18n="docCardH">Crop Doctor</span></h2>
+        <p class="sub" data-i18n="docCardP">Something wrong with your crop? Take a photo and the AI will tell you what it sees and what to do next.</p>
+        <button class="btn solid block" data-goto="doctor" data-i18n="docCardBtn">Check my crop with a photo</button>
+      </div>
 
-    <div class="card">
-      <h2>📢 Latest advisories</h2>
-      <p class="sub">Updates from the AgriNexus research team.</p>
-      <div id="advList"><div class="empty">Loading…</div></div>
-    </div>
+      <div class="card">
+        <h2>🤖 Ask AgriNexus AI</h2>
+        <p class="sub">Got a question about pests, irrigation or your crop? Ask in plain words.</p>
+        <button class="btn solid block" data-goto="ai">Open AI assistant</button>
+      </div>
 
-    <div class="card">
-      <h2>💰 Today's reference prices</h2>
-      <p class="sub">Per quintal — set by the research team, updated as markets move.</p>
-      <div class="price-wrap"><table class="price-tbl" id="priceTbl"><tbody></tbody></table></div>
-      <p class="fine" id="priceNote"></p>
-    </div>
+      <div class="card">
+        <h2>📢 Latest advisories</h2>
+        <p class="sub">Updates from the AgriNexus research team.</p>
+        <div id="advList"><div class="empty">Loading…</div></div>
+      </div>
 
-    <div class="card">
-      <h2>🤖 Ask AgriNexus AI</h2>
-      <p class="sub">Got a question about pests, irrigation or your crop? Ask in plain words.</p>
-      <button class="btn solid block" data-goto="ai">Open AI assistant</button>
-    </div>
-    <div class="card">
-      <h2>🌍 Explore AgriNexus</h2>
-      <p class="sub">See the full story of the platform, or the pitch for partners.</p>
-      <div class="grid2">
-        <a data-site="home" class="btn ghost" href="https://claude.ai/artifact/JVW3Gpqzek7UZuoNH1yUxT" target="_blank" rel="noopener">Home and story</a>
-        <a data-site="pitch" class="btn outline" href="https://claude.ai/artifact/RoEruk2N98L7q6XNmTKgT5" target="_blank" rel="noopener">The pitch</a>
+      <div class="card">
+        <h2>💰 Today's reference prices</h2>
+        <p class="sub">Per quintal — set by the research team, updated as markets move.</p>
+        <div class="price-wrap"><table class="price-tbl" id="priceTbl"><tbody></tbody></table></div>
+        <p class="fine" id="priceNote"></p>
+      </div>
+
+      <div class="card span-full">
+        <h2>🌍 Explore AgriNexus</h2>
+        <p class="sub">See the full story of the platform, or the pitch for partners.</p>
+        <div class="grid2">
+          <a data-site="home" class="btn ghost" href="https://claude.ai/artifact/JVW3Gpqzek7UZuoNH1yUxT" target="_blank" rel="noopener">Home and story</a>
+          <a data-site="pitch" class="btn outline" href="https://claude.ai/artifact/RoEruk2N98L7q6XNmTKgT5" target="_blank" rel="noopener">The pitch</a>
+        </div>
       </div>
     </div>
   </section>
@@ -714,39 +759,42 @@ nav.tabs::-webkit-scrollbar{ display:none; }
 
   <!-- CROP DOCTOR -->
   <section class="panel" id="p-doctor">
-    <div class="card">
-      <h2>📷 Crop Doctor</h2>
-      <p class="sub">Take or upload up to 3 clear photos of the problem: leaves, stem, fruit or the whole plant. The AI explains what it sees and what to do.</p>
-      <div class="note-box warn" id="docUnavailable" hidden>Photo checks run inside claude.ai. Open this app there to use the Crop Doctor.</div>
+    <div class="panel-grid-2">
+      <div class="card">
+        <h2>📷 Crop Doctor</h2>
+        <p class="sub">Take or upload up to 3 clear photos of the problem: leaves, stem, fruit or the whole plant. The AI explains what it sees and what to do.</p>
+        <div class="note-box warn" id="docUnavailable" hidden>Photo checks run inside claude.ai. Open this app there to use the Crop Doctor.</div>
 
-      <div class="shots" id="docShots" aria-live="polite"></div>
-      <div class="doc-actions">
-        <button type="button" class="btn solid" id="docCamBtn">📸 Take photo</button>
-        <button type="button" class="btn outline" id="docUpBtn">🖼 Upload</button>
+        <div class="shots" id="docShots" aria-live="polite"></div>
+        <div class="doc-actions">
+          <button type="button" class="btn solid" id="docCamBtn">📸 Take photo</button>
+          <button type="button" class="btn outline" id="docUpBtn">🖼 Upload</button>
+        </div>
+        <input type="file" id="docCamera" accept="image/*" capture="environment" hidden>
+        <input type="file" id="docUpload" accept="image/*" multiple hidden>
+
+        <div class="field">
+          <label for="docCrop">Which crop?</label>
+          <select id="docCrop">
+            <option value="">Not sure, identify it</option><option>Rice</option><option>Groundnut</option><option>Maize</option><option>Cotton</option>
+            <option>Tomato</option><option>Chilli</option><option>Brinjal</option><option>Banana</option><option>Sugarcane</option><option>Coconut</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="docNote">Anything else we should know? (optional)</label>
+          <textarea id="docNote" placeholder="e.g. Spots appeared 4 days after heavy rain and are spreading fast"></textarea>
+        </div>
+        <button class="btn solid block" id="docRun" disabled>Check my crop</button>
+        <p class="fine">For the best result, use daylight, fill the frame with one leaf, and add a photo of a healthy leaf for comparison. The AI gives guidance, not a lab test. For serious outbreaks, confirm with your local agriculture office or KVK.</p>
       </div>
-      <input type="file" id="docCamera" accept="image/*" capture="environment" hidden>
-      <input type="file" id="docUpload" accept="image/*" multiple hidden>
 
-      <div class="field">
-        <label for="docCrop">Which crop?</label>
-        <select id="docCrop">
-          <option value="">Not sure, identify it</option><option>Rice</option><option>Groundnut</option><option>Maize</option><option>Cotton</option>
-          <option>Tomato</option><option>Chilli</option><option>Brinjal</option><option>Banana</option><option>Sugarcane</option><option>Coconut</option><option>Other</option>
-        </select>
+      <div style="display:grid;gap:1.2rem">
+        <div class="card dx result" id="docResult" aria-live="polite"></div>
+        <div class="card" id="docHistoryCard" hidden>
+          <h2>🗂 Past checks</h2>
+          <div id="docHistory"></div>
+        </div>
       </div>
-      <div class="field">
-        <label for="docNote">Anything else we should know? (optional)</label>
-        <textarea id="docNote" placeholder="e.g. Spots appeared 4 days after heavy rain and are spreading fast"></textarea>
-      </div>
-      <button class="btn solid block" id="docRun" disabled>Check my crop</button>
-      <p class="fine">For the best result, use daylight, fill the frame with one leaf, and add a photo of a healthy leaf for comparison. The AI gives guidance, not a lab test. For serious outbreaks, confirm with your local agriculture office or KVK.</p>
-    </div>
-
-    <div class="card dx result" id="docResult" aria-live="polite"></div>
-
-    <div class="card" id="docHistoryCard" hidden>
-      <h2>🗂 Past checks</h2>
-      <div id="docHistory"></div>
     </div>
   </section>
 
@@ -927,93 +975,95 @@ nav.tabs::-webkit-scrollbar{ display:none; }
       <p>Experiment with hypothetical farming decisions before planting. Change water availability, fertilizer inputs, labor, and market shocks to observe non-linear yield and profit outcomes.</p>
     </div>
 
-    <div class="card">
-      <h2>⚙️ Scenario Experiment Controls</h2>
-      <p class="sub">Select a crop and adjust variables to test sensitivity and risk.</p>
-      
-      <div class="grid2">
+    <div class="panel-grid-2">
+      <div class="card">
+        <h2>⚙️ Scenario Experiment Controls</h2>
+        <p class="sub">Select a crop and adjust variables to test sensitivity and risk.</p>
+        
+        <div class="grid2">
+          <div class="field">
+            <label for="simCrop">Test Crop</label>
+            <select id="simCrop"></select>
+          </div>
+          <div class="field">
+            <label for="simAcres">Land Area (Acres) <span class="v" id="simAcresV">3</span></label>
+            <input type="range" id="simAcres" min="0.5" max="20" step="0.5" value="3">
+          </div>
+        </div>
+
         <div class="field">
-          <label for="simCrop">Test Crop</label>
-          <select id="simCrop"></select>
+          <label for="simWater">💧 Water Availability vs Requirement <span class="v" id="simWaterV">0%</span></label>
+          <input type="range" id="simWater" min="-50" max="50" step="5" value="0">
+          <div class="hint">−50% (Severe Drought/Canal Breach) to +50% (Monsoon Surplus)</div>
         </div>
+
         <div class="field">
-          <label for="simAcres">Land Area (Acres) <span class="v" id="simAcresV">3</span></label>
-          <input type="range" id="simAcres" min="0.5" max="20" step="0.5" value="3">
+          <label for="simFert">🧪 Fertilizer & Nutrient Input Level <span class="v" id="simFertV">0%</span></label>
+          <input type="range" id="simFert" min="-50" max="50" step="5" value="0">
+          <div class="hint">−50% (Low-input / Subsidized bio) to +50% (High Intensive)</div>
         </div>
-      </div>
 
-      <div class="field">
-        <label for="simWater">💧 Water Availability vs Requirement <span class="v" id="simWaterV">0%</span></label>
-        <input type="range" id="simWater" min="-50" max="50" step="5" value="0">
-        <div class="hint">−50% (Severe Drought/Canal Breach) to +50% (Monsoon Surplus)</div>
-      </div>
-
-      <div class="field">
-        <label for="simFert">🧪 Fertilizer & Nutrient Input Level <span class="v" id="simFertV">0%</span></label>
-        <input type="range" id="simFert" min="-50" max="50" step="5" value="0">
-        <div class="hint">−50% (Low-input / Subsidized bio) to +50% (High Intensive)</div>
-      </div>
-
-      <div class="field">
-        <label for="simLabor">👷 Labor Supply & Wage Index <span class="v" id="simLaborV">0%</span></label>
-        <input type="range" id="simLabor" min="-40" max="40" step="5" value="0">
-        <div class="hint">−40% (Peak harvest shortage) to +40% (Abundant family labor)</div>
-      </div>
-
-      <div class="field">
-        <label for="simPrice">📈 Mandi Price Fluctuation <span class="v" id="simPriceV">0%</span></label>
-        <input type="range" id="simPrice" min="-40" max="60" step="5" value="0">
-        <div class="hint">−40% (Market Glut / Crash) to +60% (Off-season Festival Surge)</div>
-      </div>
-
-      <div class="field">
-        <label for="simClimate">🌦️ Extreme Climate Shock Scenario</label>
-        <select id="simClimate">
-          <option value="none">Normal Season (Baseline historical climate)</option>
-          <option value="heatwave">Heatwave during Flowering (+3.5°C thermal stress)</option>
-          <option value="waterlog">Unseasonal Heavy Rains at Harvest (Waterlogging)</option>
-          <option value="delayed">Delayed Monsoon (Late sowing, shorter window)</option>
-        </select>
-      </div>
-
-      <button class="btn solid block" id="btnSimReset" type="button" style="margin-top:.4rem">↺ Reset Variables to Baseline</button>
-    </div>
-
-    <div class="card">
-      <h2>📊 Scenario Comparison Dashboard</h2>
-      <p class="sub">Baseline Normal vs Stated Scenario Outcome.</p>
-
-      <div class="sim-vs">
-        <div class="sim-col">
-          <h3>📌 Baseline</h3>
-          <div class="sim-metric"><small>Projected Yield</small><b id="simBaseYield">--</b></div>
-          <div class="sim-metric"><small>Production Cost</small><b id="simBaseCost">--</b></div>
-          <div class="sim-metric"><small>Expected Net Profit</small><b id="simBaseProfit">--</b></div>
-          <div class="sim-metric"><small>Moisture Stress</small><b>None (0%)</b></div>
+        <div class="field">
+          <label for="simLabor">👷 Labor Supply & Wage Index <span class="v" id="simLaborV">0%</span></label>
+          <input type="range" id="simLabor" min="-40" max="40" step="5" value="0">
+          <div class="hint">−40% (Peak harvest shortage) to +40% (Abundant family labor)</div>
         </div>
-        <div class="sim-col highlight">
-          <h3>🧪 Simulated</h3>
-          <div class="sim-metric"><small>Projected Yield</small><b id="simOutYield">--</b><span id="simDeltaYield"></span></div>
-          <div class="sim-metric"><small>Production Cost</small><b id="simOutCost">--</b><span id="simDeltaCost"></span></div>
-          <div class="sim-metric"><small>Simulated Net Profit</small><b id="simOutProfit">--</b><span id="simDeltaProfit"></span></div>
-          <div class="sim-metric"><small>Moisture Stress</small><b id="simOutStress">--</b></div>
+
+        <div class="field">
+          <label for="simPrice">📈 Mandi Price Fluctuation <span class="v" id="simPriceV">0%</span></label>
+          <input type="range" id="simPrice" min="-40" max="60" step="5" value="0">
+          <div class="hint">−40% (Market Glut / Crash) to +60% (Off-season Festival Surge)</div>
         </div>
+
+        <div class="field">
+          <label for="simClimate">🌦️ Extreme Climate Shock Scenario</label>
+          <select id="simClimate">
+            <option value="none">Normal Season (Baseline historical climate)</option>
+            <option value="heatwave">Heatwave during Flowering (+3.5°C thermal stress)</option>
+            <option value="waterlog">Unseasonal Heavy Rains at Harvest (Waterlogging)</option>
+            <option value="delayed">Delayed Monsoon (Late sowing, shorter window)</option>
+          </select>
+        </div>
+
+        <button class="btn solid block" id="btnSimReset" type="button" style="margin-top:.4rem">↺ Reset Variables to Baseline</button>
       </div>
 
-      <div class="grid2">
-        <div class="stat"><small>Downside Risk Rating</small><b id="simRiskRating">Medium</b></div>
-        <div class="stat"><small>Breakeven Mandi Price</small><b id="simBreakeven">₹-- / q</b></div>
-      </div>
+      <div class="card">
+        <h2>📊 Scenario Comparison Dashboard</h2>
+        <p class="sub">Baseline Normal vs Stated Scenario Outcome.</p>
 
-      <div class="assump-box">
-        <b>📐 Stated Mathematical Model & Assumptions:</b>
-        <br>• Yield response incorporates Jensen-Hanks water-production elasticity ($Ky \approx 0.85 - 1.15$).
-        <br>• Diminishing marginal returns on fertilizer modeled via Cobb-Douglas response ($E_f = 0.28$).
-        <br>• Results represent empirical agro-climatic projections with stated $\pm12\%$ variance bounds.
-      </div>
+        <div class="sim-vs">
+          <div class="sim-col">
+            <h3>📌 Baseline</h3>
+            <div class="sim-metric"><small>Projected Yield</small><b id="simBaseYield">--</b></div>
+            <div class="sim-metric"><small>Production Cost</small><b id="simBaseCost">--</b></div>
+            <div class="sim-metric"><small>Expected Net Profit</small><b id="simBaseProfit">--</b></div>
+            <div class="sim-metric"><small>Moisture Stress</small><b>None (0%)</b></div>
+          </div>
+          <div class="sim-col highlight">
+            <h3>🧪 Simulated</h3>
+            <div class="sim-metric"><small>Projected Yield</small><b id="simOutYield">--</b><span id="simDeltaYield"></span></div>
+            <div class="sim-metric"><small>Production Cost</small><b id="simOutCost">--</b><span id="simDeltaCost"></span></div>
+            <div class="sim-metric"><small>Simulated Net Profit</small><b id="simOutProfit">--</b><span id="simDeltaProfit"></span></div>
+            <div class="sim-metric"><small>Moisture Stress</small><b id="simOutStress">--</b></div>
+          </div>
+        </div>
 
-      <button class="btn ghost block" id="btnExplainScenario" type="button" style="margin-top:1rem">🤖 Ask Farm Advisor AI to Explain This Scenario</button>
-      <div id="simAiExplanation" class="card" hidden style="margin-top:1rem;background:rgba(8,34,16,.75)"></div>
+        <div class="grid2">
+          <div class="stat"><small>Downside Risk Rating</small><b id="simRiskRating">Medium</b></div>
+          <div class="stat"><small>Breakeven Mandi Price</small><b id="simBreakeven">₹-- / q</b></div>
+        </div>
+
+        <div class="assump-box">
+          <b>📐 Stated Mathematical Model & Assumptions:</b>
+          <br>• Yield response incorporates Jensen-Hanks water-production elasticity ($Ky \approx 0.85 - 1.15$).
+          <br>• Diminishing marginal returns on fertilizer modeled via Cobb-Douglas response ($E_f = 0.28$).
+          <br>• Results represent empirical agro-climatic projections with stated $\pm12\%$ variance bounds.
+        </div>
+
+        <button class="btn ghost block" id="btnExplainScenario" type="button" style="margin-top:1rem">🤖 Ask Farm Advisor AI to Explain This Scenario</button>
+        <div id="simAiExplanation" class="card" hidden style="margin-top:1rem;background:rgba(8,34,16,.75)"></div>
+      </div>
     </div>
   </section>
 
@@ -1024,91 +1074,93 @@ nav.tabs::-webkit-scrollbar{ display:none; }
       <p>Allocate limited water, fertilizer, labor, and machinery energy across crop lifecycle stages. Make operational trade-offs visible rather than relying on black-box assumptions.</p>
     </div>
 
-    <div class="card">
-      <div class="seg" id="budgetTabSelector">
-        <button type="button" class="on" data-res="water">💧 Water Budget</button>
-        <button type="button" data-res="fert">🧪 Nutrient & Fertilizer</button>
-        <button type="button" data-res="labor">👷 Labor Person-Days</button>
-        <button type="button" data-res="energy">⚡ Energy & Machinery</button>
-      </div>
+    <div class="panel-grid-2">
+      <div class="card">
+        <div class="seg" id="budgetTabSelector">
+          <button type="button" class="on" data-res="water">💧 Water Budget</button>
+          <button type="button" data-res="fert">🧪 Nutrient & Fertilizer</button>
+          <button type="button" data-res="labor">👷 Labor Person-Days</button>
+          <button type="button" data-res="energy">⚡ Energy & Machinery</button>
+        </div>
 
-      <!-- Water Section -->
-      <div id="res-sec-water" class="res-sec">
-        <div class="res-gauge-card">
-          <div class="gauge-header">
-            <span>Water Allocation Budget</span>
-            <b id="waterGaugeText">100% Allocated</b>
+        <!-- Water Section -->
+        <div id="res-sec-water" class="res-sec">
+          <div class="res-gauge-card">
+            <div class="gauge-header">
+              <span>Water Allocation Budget</span>
+              <b id="waterGaugeText">100% Allocated</b>
+            </div>
+            <div class="gauge-bar" id="waterGaugeBar">
+              <div class="gauge-segment" style="width:15%;background:#9AD4EC" title="Sowing"></div>
+              <div class="gauge-segment" style="width:25%;background:#6F9D3C" title="Vegetative"></div>
+              <div class="gauge-segment" style="width:35%;background:#F2C66D" title="Flowering"></div>
+              <div class="gauge-segment" style="width:25%;background:#8FCB45" title="Grain Fill"></div>
+            </div>
+            <div class="prog-lbl"><span>Total Available: <b>450,000 Liters / Acre</b></span><span id="waterBalanceText" style="color:var(--leaf)">Balance: 0 L</span></div>
           </div>
-          <div class="gauge-bar" id="waterGaugeBar">
-            <div class="gauge-segment" style="width:15%;background:#9AD4EC" title="Sowing"></div>
-            <div class="gauge-segment" style="width:25%;background:#6F9D3C" title="Vegetative"></div>
-            <div class="gauge-segment" style="width:35%;background:#F2C66D" title="Flowering"></div>
-            <div class="gauge-segment" style="width:25%;background:#8FCB45" title="Grain Fill"></div>
+
+          <div class="field"><label for="rbWaterSow">Stage 1: Field Prep & Sowing <span class="v" id="rbWaterSowV">15%</span></label><input type="range" id="rbWaterSow" min="5" max="40" step="5" value="15"></div>
+          <div class="field"><label for="rbWaterVeg">Stage 2: Vegetative Growth <span class="v" id="rbWaterVegV">25%</span></label><input type="range" id="rbWaterVeg" min="10" max="50" step="5" value="25"></div>
+          <div class="field"><label for="rbWaterFlower">Stage 3: Flowering & Podding (Critical) <span class="v" id="rbWaterFlowerV">35%</span></label><input type="range" id="rbWaterFlower" min="10" max="60" step="5" value="35"></div>
+          <div class="field"><label for="rbWaterGrain">Stage 4: Grain Fill & Maturity <span class="v" id="rbWaterGrainV">25%</span></label><input type="range" id="rbWaterGrain" min="5" max="40" step="5" value="25"></div>
+        </div>
+
+        <!-- Fertilizer Section -->
+        <div id="res-sec-fert" class="res-sec" hidden>
+          <div class="res-gauge-card">
+            <div class="gauge-header"><span>Fertilizer Split Allocation</span><b id="fertGaugeText">100% Allocated</b></div>
+            <div class="gauge-bar" id="fertGaugeBar">
+              <div class="gauge-segment" style="width:40%;background:#F2C66D"></div>
+              <div class="gauge-segment" style="width:35%;background:#B6E36B"></div>
+              <div class="gauge-segment" style="width:25%;background:#9AD4EC"></div>
+            </div>
+            <div class="prog-lbl"><span>Target N-P-K: <b>120:60:40 kg/ha</b></span><span id="fertBalanceText" style="color:var(--leaf)">Balance: 0 kg</span></div>
           </div>
-          <div class="prog-lbl"><span>Total Available: <b>450,000 Liters / Acre</b></span><span id="waterBalanceText" style="color:var(--leaf)">Balance: 0 L</span></div>
+
+          <div class="field"><label for="rbFertBasal">Basal Dressing (At sowing) <span class="v" id="rbFertBasalV">40%</span></label><input type="range" id="rbFertBasal" min="10" max="70" step="5" value="40"></div>
+          <div class="field"><label for="rbFertTop1">1st Top Dressing (Active tillering / 25 DAS) <span class="v" id="rbFertTop1V">35%</span></label><input type="range" id="rbFertTop1" min="10" max="50" step="5" value="35"></div>
+          <div class="field"><label for="rbFertTop2">2nd Top Dressing (Panicle / Flowering) <span class="v" id="rbFertTop2V">25%</span></label><input type="range" id="rbFertTop2" min="0" max="40" step="5" value="25"></div>
         </div>
 
-        <div class="field"><label for="rbWaterSow">Stage 1: Field Prep & Sowing <span class="v" id="rbWaterSowV">15%</span></label><input type="range" id="rbWaterSow" min="5" max="40" step="5" value="15"></div>
-        <div class="field"><label for="rbWaterVeg">Stage 2: Vegetative Growth <span class="v" id="rbWaterVegV">25%</span></label><input type="range" id="rbWaterVeg" min="10" max="50" step="5" value="25"></div>
-        <div class="field"><label for="rbWaterFlower">Stage 3: Flowering & Podding (Critical) <span class="v" id="rbWaterFlowerV">35%</span></label><input type="range" id="rbWaterFlower" min="10" max="60" step="5" value="35"></div>
-        <div class="field"><label for="rbWaterGrain">Stage 4: Grain Fill & Maturity <span class="v" id="rbWaterGrainV">25%</span></label><input type="range" id="rbWaterGrain" min="5" max="40" step="5" value="25"></div>
-      </div>
-
-      <!-- Fertilizer Section -->
-      <div id="res-sec-fert" class="res-sec" hidden>
-        <div class="res-gauge-card">
-          <div class="gauge-header"><span>Fertilizer Split Allocation</span><b id="fertGaugeText">100% Allocated</b></div>
-          <div class="gauge-bar" id="fertGaugeBar">
-            <div class="gauge-segment" style="width:40%;background:#F2C66D"></div>
-            <div class="gauge-segment" style="width:35%;background:#B6E36B"></div>
-            <div class="gauge-segment" style="width:25%;background:#9AD4EC"></div>
+        <!-- Labor Section -->
+        <div id="res-sec-labor" class="res-sec" hidden>
+          <div class="res-gauge-card">
+            <div class="gauge-header"><span>Labor Person-Days Budget</span><b id="laborGaugeText">32 Days Allocated</b></div>
+            <div class="prog-lbl"><span>Total Seasonal Labor Available: <b>32 Person-Days</b></span><span id="laborBalanceText" style="color:var(--leaf)">Remaining: 0 days</span></div>
           </div>
-          <div class="prog-lbl"><span>Target N-P-K: <b>120:60:40 kg/ha</b></span><span id="fertBalanceText" style="color:var(--leaf)">Balance: 0 kg</span></div>
+
+          <div class="field"><label for="rbLaborTill">Land Prep & Sowing <span class="v" id="rbLaborTillV">6 days</span></label><input type="range" id="rbLaborTill" min="2" max="15" step="1" value="6"></div>
+          <div class="field"><label for="rbLaborWeed">Weeding & Intercultural <span class="v" id="rbLaborWeedV">10 days</span></label><input type="range" id="rbLaborWeed" min="2" max="20" step="1" value="10"></div>
+          <div class="field"><label for="rbLaborSpray">Irrigation & Crop Protection <span class="v" id="rbLaborSprayV">6 days</span></label><input type="range" id="rbLaborSpray" min="2" max="15" step="1" value="6"></div>
+          <div class="field"><label for="rbLaborHarvest">Harvesting, Threshing & Bagging <span class="v" id="rbLaborHarvestV">10 days</span></label><input type="range" id="rbLaborHarvest" min="4" max="25" step="1" value="10"></div>
         </div>
 
-        <div class="field"><label for="rbFertBasal">Basal Dressing (At sowing) <span class="v" id="rbFertBasalV">40%</span></label><input type="range" id="rbFertBasal" min="10" max="70" step="5" value="40"></div>
-        <div class="field"><label for="rbFertTop1">1st Top Dressing (Active tillering / 25 DAS) <span class="v" id="rbFertTop1V">35%</span></label><input type="range" id="rbFertTop1" min="10" max="50" step="5" value="35"></div>
-        <div class="field"><label for="rbFertTop2">2nd Top Dressing (Panicle / Flowering) <span class="v" id="rbFertTop2V">25%</span></label><input type="range" id="rbFertTop2" min="0" max="40" step="5" value="25"></div>
+        <!-- Energy Section -->
+        <div id="res-sec-energy" class="res-sec" hidden>
+          <div class="res-gauge-card">
+            <div class="gauge-header"><span>Machinery & Energy Allocation</span><b id="energyGaugeText">24 Hours Allocated</b></div>
+            <div class="prog-lbl"><span>Tractor & Pump Operating Fuel Budget: <b>₹14,500</b></span></div>
+          </div>
+          <div class="field"><label for="rbEnergyTractor">Tractor Primary & Secondary Tillage <span class="v" id="rbEnergyTractorV">8 hrs</span></label><input type="range" id="rbEnergyTractor" min="2" max="20" step="1" value="8"></div>
+          <div class="field"><label for="rbEnergyPump">Borewell / Tube-well Pumping <span class="v" id="rbEnergyPumpV">16 hrs</span></label><input type="range" id="rbEnergyPump" min="0" max="50" step="2" value="16"></div>
+        </div>
       </div>
 
-      <!-- Labor Section -->
-      <div id="res-sec-labor" class="res-sec" hidden>
-        <div class="res-gauge-card">
-          <div class="gauge-header"><span>Labor Person-Days Budget</span><b id="laborGaugeText">32 Days Allocated</b></div>
-          <div class="prog-lbl"><span>Total Seasonal Labor Available: <b>32 Person-Days</b></span><span id="laborBalanceText" style="color:var(--leaf)">Remaining: 0 days</span></div>
+      <!-- Visible Trade-Offs Engine -->
+      <div class="card">
+        <h2>⚖️ Visible System Trade-Offs</h2>
+        <p class="sub">How changing one resource allocation affects biological efficiency and risks.</p>
+
+        <div class="tradeoff-list" id="tradeoffCards"></div>
+
+        <div class="grid2" style="margin-top:1rem">
+          <div class="stat"><small>Water Productivity</small><b id="tbWaterProd">1.82 kg/m³</b></div>
+          <div class="stat"><small>Labor Value Return</small><b id="tbLaborReturn">₹1,420 / day</b></div>
         </div>
 
-        <div class="field"><label for="rbLaborTill">Land Prep & Sowing <span class="v" id="rbLaborTillV">6 days</span></label><input type="range" id="rbLaborTill" min="2" max="15" step="1" value="6"></div>
-        <div class="field"><label for="rbLaborWeed">Weeding & Intercultural <span class="v" id="rbLaborWeedV">10 days</span></label><input type="range" id="rbLaborWeed" min="2" max="20" step="1" value="10"></div>
-        <div class="field"><label for="rbLaborSpray">Irrigation & Crop Protection <span class="v" id="rbLaborSprayV">6 days</span></label><input type="range" id="rbLaborSpray" min="2" max="15" step="1" value="6"></div>
-        <div class="field"><label for="rbLaborHarvest">Harvesting, Threshing & Bagging <span class="v" id="rbLaborHarvestV">10 days</span></label><input type="range" id="rbLaborHarvest" min="4" max="25" step="1" value="10"></div>
+        <button class="btn ghost block" id="btnAnalyzeBudget" type="button" style="margin-top:1rem">🤖 AI Multi-Resource Trade-Off Analysis</button>
+        <div id="budgetAiAnalysis" class="card" hidden style="margin-top:1rem;background:rgba(8,34,16,.75)"></div>
       </div>
-
-      <!-- Energy Section -->
-      <div id="res-sec-energy" class="res-sec" hidden>
-        <div class="res-gauge-card">
-          <div class="gauge-header"><span>Machinery & Energy Allocation</span><b id="energyGaugeText">24 Hours Allocated</b></div>
-          <div class="prog-lbl"><span>Tractor & Pump Operating Fuel Budget: <b>₹14,500</b></span></div>
-        </div>
-        <div class="field"><label for="rbEnergyTractor">Tractor Primary & Secondary Tillage <span class="v" id="rbEnergyTractorV">8 hrs</span></label><input type="range" id="rbEnergyTractor" min="2" max="20" step="1" value="8"></div>
-        <div class="field"><label for="rbEnergyPump">Borewell / Tube-well Pumping <span class="v" id="rbEnergyPumpV">16 hrs</span></label><input type="range" id="rbEnergyPump" min="0" max="50" step="2" value="16"></div>
-      </div>
-    </div>
-
-    <!-- Visible Trade-Offs Engine -->
-    <div class="card">
-      <h2>⚖️ Visible System Trade-Offs</h2>
-      <p class="sub">How changing one resource allocation affects biological efficiency and risks.</p>
-
-      <div class="tradeoff-list" id="tradeoffCards"></div>
-
-      <div class="grid2" style="margin-top:1rem">
-        <div class="stat"><small>Water Productivity</small><b id="tbWaterProd">1.82 kg/m³</b></div>
-        <div class="stat"><small>Labor Value Return</small><b id="tbLaborReturn">₹1,420 / day</b></div>
-      </div>
-
-      <button class="btn ghost block" id="btnAnalyzeBudget" type="button" style="margin-top:1rem">🤖 AI Multi-Resource Trade-Off Analysis</button>
-      <div id="budgetAiAnalysis" class="card" hidden style="margin-top:1rem;background:rgba(8,34,16,.75)"></div>
     </div>
   </section>
 
