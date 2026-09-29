@@ -1,0 +1,1857 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AgriNexus: One Platform. Your Entire Farm.</title>
+<meta name="description" content="AgriNexus connects soil, water, crop, labour, machinery, harvest, storage, logistics and market into one AI platform for the whole farm.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#123A26; --deep:#1A4A31; --loam:#2B2118;
+  --sprout:#9FD45A; --wheat:#E3B45F; --rain:#7DB8C9; --clay:#C9A27E; --alarm:#C07A6A;
+  --mist:#F2F7EC; --mist-2:rgba(232,236,226,.7); --mist-3:rgba(232,236,226,.45);
+  --glass:rgba(20,64,40,.5); --glass-edge:rgba(214,240,200,.22);
+  --display:'Barlow',system-ui,sans-serif;
+  --text:'Barlow',system-ui,sans-serif;
+  --heading:'Instrument Serif',Georgia,serif;
+  color-scheme:dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+/* AgriNexus is a dark-only brand; tokens are restated for every theme path */
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --night:#123A26; --mist:#F2F7EC; --glass:rgba(20,64,40,.5); } }
+:root[data-theme="dark"]{ --night:#123A26; --mist:#F2F7EC; --glass:rgba(20,64,40,.5); }
+html{ scroll-padding-top:env(safe-area-inset-top,0px); background:var(--night); }
+*,*::before,*::after{ box-sizing:inherit; }
+body{
+  margin:0; background:var(--night); color:var(--mist);
+  font-family:var(--text); font-size:1.0625rem; line-height:1.62;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+a{ color:inherit; }
+:focus-visible{ outline:2px solid var(--wheat); outline-offset:3px; border-radius:6px; }
+
+#gl{ position:fixed; top:0; left:0; width:100%; height:100%; display:block; z-index:0; }
+.no-gl #gl{ display:none; }
+.no-gl body, body.no-gl{ background:
+  radial-gradient(120% 80% at 70% 20%, #24382c 0%, transparent 60%),
+  radial-gradient(90% 70% at 20% 100%, #3a2b1d 0%, transparent 65%), var(--night); background-attachment:fixed; }
+
+.scrim{ position:fixed; inset:0; pointer-events:none; z-index:1;
+  background:linear-gradient(90deg, rgba(10,48,28,.72) 0%, rgba(10,48,28,.34) 34%, rgba(10,48,28,0) 58%); transition:opacity .8s; }
+.vig{ position:fixed; inset:0; pointer-events:none; z-index:1; display:none; background:radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0) 55%, rgba(8,30,18,.35)); }
+body.css-vig .vig{ display:block; }
+body.centered .scrim{ opacity:.25; }
+
+/* ---------- header ---------- */
+.bar{ position:fixed; top:0; left:0; right:0; z-index:20; display:flex; align-items:center; justify-content:space-between;
+  padding:calc(env(safe-area-inset-top,0px) + 18px) 6vw 0; pointer-events:none; }
+.bar > *{ pointer-events:auto; }
+.logo{ display:flex; align-items:center; gap:.6rem; text-decoration:none; font-family:var(--display); font-weight:700; font-size:1.2rem; letter-spacing:-.02em; }
+.logo svg{ width:30px; height:30px; }
+.btn{ display:inline-flex; align-items:center; gap:.5rem; font-family:var(--display); font-weight:600; font-size:.95rem; text-decoration:none;
+  padding:.72rem 1.2rem; border-radius:999px; border:1px solid var(--glass-edge); background:var(--glass);
+  -webkit-backdrop-filter:blur(16px) saturate(140%); backdrop-filter:blur(16px) saturate(140%); color:var(--mist); cursor:pointer; transition:background .25s, transform .25s; }
+.btn:hover{ background:rgba(232,236,226,.12); }
+.btn.solid{ background:var(--sprout); color:#0E2A14; border-color:transparent; }
+.btn.solid:hover{ background:#B2E072; }
+
+.btn svg{ width:15px; height:15px; }
+.navpill{ display:flex; align-items:center; gap:.15rem; padding:.3rem; border-radius:999px; background:var(--glass); border:1px solid var(--glass-edge);
+  -webkit-backdrop-filter:blur(16px) saturate(140%); backdrop-filter:blur(16px) saturate(140%); }
+.navpill a{ font-family:var(--display); font-size:.9rem; font-weight:500; text-decoration:none; color:var(--mist-2); padding:.5rem .85rem; border-radius:999px; transition:background .2s, color .2s; }
+.navpill a:hover{ background:rgba(232,236,226,.1); color:var(--mist); }
+.navright{ display:flex; align-items:center; gap:.5rem; }
+.menubtn{ display:none; width:44px; height:44px; border-radius:50%; padding:0; justify-content:center; }
+.menubtn svg{ width:20px; height:20px; }
+.sheet{ position:fixed; inset:0; z-index:40; background:rgba(8,28,17,.9); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px);
+  display:flex; flex-direction:column; justify-content:center; gap:.4rem; padding:6rem 1.6rem 3rem; opacity:0; visibility:hidden; transition:opacity .3s, visibility .3s; }
+body.menu-open .sheet{ opacity:1; visibility:visible; }
+.sheet a{ font-family:var(--display); font-size:1.9rem; font-weight:600; letter-spacing:-.02em; text-decoration:none; color:var(--mist); padding:.45rem 0; border-bottom:1px solid var(--glass-edge); display:flex; justify-content:space-between; align-items:center; }
+.sheet a small{ font-size:.85rem; font-weight:500; color:var(--mist-3); }
+.sheet .btn{ margin-top:1.2rem; justify-content:center; font-size:1.05rem; border-bottom:none; }
+.hero-ctas{ display:flex; flex-wrap:wrap; gap:.7rem; margin-top:1.8rem; }
+@media (max-width: 960px){ .navpill{ display:none; } .menubtn{ display:inline-flex; } .navright .ghostlink{ display:none; } }
+.navright .btn{ white-space:nowrap; }
+@media (max-width: 420px){ .logo{ font-size:1.05rem; } .navright .btn.solid{ padding:.6rem .85rem; font-size:.82rem; } }
+
+/* ---------- hub: everything in one place ---------- */
+.hub{ flex-direction:column; align-items:stretch; justify-content:center; padding-top:14vh; padding-bottom:12vh; }
+.hub-head{ max-width:40rem; margin-bottom:2rem; align-self:flex-start; }
+body.menu-open .bar{ z-index:45; }
+.hub-grid{ display:grid; gap:1rem; grid-template-columns:1.35fr 1fr; }
+.hub-card{ border-radius:24px; padding:1.6rem; display:flex; flex-direction:column; gap:.8rem; text-decoration:none; color:var(--mist);
+  background:var(--glass); border:1px solid var(--glass-edge); -webkit-backdrop-filter:blur(18px) saturate(140%); backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:0 30px 80px -34px rgba(0,0,0,.6); transition:transform .25s, border-color .25s; }
+a.hub-card:hover{ transform:translateY(-3px); border-color:rgba(214,240,200,.4); }
+.hub-card.main{ grid-row:span 2; background:linear-gradient(160deg, rgba(159,212,90,.26), rgba(20,64,40,.55) 55%); border-color:rgba(159,212,90,.45); }
+.hub-card .kind{ font-family:var(--display); font-size:.85rem; font-weight:500; color:var(--sprout); }
+.hub-card h3{ font-family:var(--display); font-weight:650; font-size:clamp(1.5rem,2.6vw,2.1rem); letter-spacing:-.03em; line-height:1.05; margin:0; }
+.hub-card p{ margin:0; color:var(--mist-2); font-size:.98rem; line-height:1.55; }
+.hub-card .go{ margin-top:auto; display:inline-flex; align-items:center; gap:.45rem; font-family:var(--display); font-weight:600; font-size:.95rem; }
+.hub-card .go svg{ width:16px; height:16px; }
+.quick{ display:grid; grid-template-columns:1fr 1fr; gap:.55rem; margin:.4rem 0 .6rem; }
+.quick a{ display:flex; align-items:center; gap:.65rem; padding:.8rem .9rem; border-radius:16px; background:rgba(8,28,17,.45); border:1px solid var(--glass-edge);
+  text-decoration:none; color:var(--mist); font-family:var(--display); font-weight:600; font-size:.95rem; transition:background .2s; }
+.quick a:hover{ background:rgba(8,28,17,.7); }
+.quick a span{ font-size:1.3rem; }
+.quick a small{ display:block; font-weight:400; font-size:.76rem; color:var(--mist-3); }
+.howto{ margin-top:1rem; display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+.howto div{ border-radius:20px; padding:1.2rem 1.3rem; background:rgba(8,28,17,.4); border:1px solid var(--glass-edge); }
+.howto b{ display:inline-grid; place-items:center; width:1.9rem; height:1.9rem; border-radius:50%; background:var(--sprout); color:#0E2A14; font-family:var(--display); font-size:.9rem; margin-bottom:.6rem; }
+.howto h4{ margin:0 0 .3rem; font-family:var(--display); font-weight:600; font-size:1.08rem; }
+.howto p{ margin:0; font-size:.9rem; color:var(--mist-2); line-height:1.5; }
+@media (max-width: 860px){ .hub-grid{ grid-template-columns:1fr; } .hub-card.main{ grid-row:auto; } .howto{ grid-template-columns:1fr; } }
+@media (max-width: 420px){ .quick{ grid-template-columns:1fr; } }
+
+/* ---------- lifecycle track ---------- */
+.track{ position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 22px); transform:translate(-50%,16px); z-index:15; opacity:0; pointer-events:none;
+  display:flex; align-items:center; gap:.2rem; padding:.45rem .55rem; border-radius:999px; background:var(--glass); border:1px solid var(--glass-edge);
+  -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); transition:opacity .5s, transform .5s; }
+body.in-cycle .track{ opacity:1; transform:translate(-50%,0); pointer-events:auto; }
+.track a{ font-family:var(--display); font-size:.82rem; font-weight:500; text-decoration:none; color:var(--mist-3); padding:.35rem .62rem; border-radius:999px; transition:color .3s, background .3s; white-space:nowrap; }
+.track a.done{ color:var(--mist-2); }
+.track a.on{ color:#1F1A0E; background:var(--sprout); }
+
+/* ---------- labels anchored to 3D ---------- */
+#labels{ position:fixed; inset:0; pointer-events:none; z-index:3; overflow:hidden; }
+.tag{ position:absolute; left:0; top:0; font-family:var(--display); font-size:.82rem; font-weight:500; white-space:nowrap;
+  padding:.3rem .62rem; border-radius:8px; background:rgba(13,25,21,.62); border:1px solid var(--glass-edge); color:var(--mist);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); will-change:transform,opacity; opacity:0; }
+.tag b{ font-weight:650; color:var(--wheat); margin-left:.35rem; font-variant-numeric:tabular-nums; }
+
+/* ---------- sections ---------- */
+main{ position:relative; z-index:2; }
+.scene{ position:relative; min-height:100vh; min-height:100svh; display:flex; align-items:center; padding:14vh 6vw; }
+.copy{ max-width:31rem; }
+.display{ font-family:var(--display); font-weight:650; font-size:clamp(2.9rem,7vw,6.4rem); line-height:.92; letter-spacing:-.045em; margin:0 0 1.5rem; font-variation-settings:'opsz' 96; text-wrap:balance; }
+h2{ font-family:var(--display); font-weight:620; font-size:clamp(2.1rem,4.4vw,4rem); line-height:.98; letter-spacing:-.035em; margin:0 0 1.2rem; font-variation-settings:'opsz' 96; text-wrap:balance; }
+.lede{ color:var(--mist-2); margin:0; max-width:29rem; font-size:1.125rem; line-height:1.66; }
+.step{ display:flex; align-items:center; gap:.6rem; margin:0 0 1rem; font-family:var(--display); font-size:1rem; font-weight:560; color:var(--wheat); }
+.step span{ display:inline-grid; place-items:center; width:1.75rem; height:1.75rem; border-radius:50%; border:1px solid rgba(227,180,95,.5); font-size:.82rem; font-variant-numeric:tabular-nums; }
+.w{ display:inline-block; overflow:hidden; vertical-align:top; padding-bottom:.1em; margin-bottom:-.1em; }
+.w > span{ display:inline-block; will-change:transform; }
+
+.glass{ background:var(--glass); border:1px solid var(--glass-edge); -webkit-backdrop-filter:blur(18px) saturate(140%); backdrop-filter:blur(18px) saturate(140%); }
+.data{ position:absolute; right:6vw; top:50%; transform:translateY(-50%); width:min(21.5rem,33vw); border-radius:22px; padding:1.35rem 1.45rem 1.3rem;
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.55); }
+.data h3{ font-family:var(--display); font-weight:600; font-size:1.02rem; letter-spacing:-.01em; margin:0 0 1rem; display:flex; justify-content:space-between; gap:1rem; }
+.data h3 em{ font-style:normal; font-weight:500; color:var(--sprout); font-size:.85rem; }
+.data dl{ display:grid; grid-template-columns:1fr 1fr; gap:.95rem 1rem; margin:0; }
+.data dl.one{ grid-template-columns:1fr; }
+.data dt{ font-size:.8rem; color:var(--mist-3); line-height:1.3; }
+.data dd{ margin:.15rem 0 0; font-family:var(--display); font-size:1.45rem; font-weight:560; letter-spacing:-.02em; font-variant-numeric:tabular-nums; line-height:1.15; }
+.data dd small{ font-size:.78rem; font-weight:450; color:var(--mist-2); letter-spacing:0; }
+.data .note{ margin:1.05rem 0 0; padding-top:.9rem; border-top:1px solid var(--glass-edge); font-size:.9rem; line-height:1.5; color:var(--mist-2); }
+.data .note strong{ color:var(--mist); font-weight:500; }
+.bids{ list-style:none; margin:0; padding:0; display:grid; gap:.55rem; }
+.bids li{ display:grid; grid-template-columns:1fr auto; align-items:center; gap:.3rem .8rem; font-size:.9rem; }
+.bids li span{ font-family:var(--display); font-weight:560; font-variant-numeric:tabular-nums; }
+.bids li i{ grid-column:1 / -1; height:3px; border-radius:3px; background:rgba(232,236,226,.1); position:relative; overflow:hidden; }
+.bids li i::after{ content:""; position:absolute; inset:0 auto 0 0; width:var(--w); background:var(--mist-3); border-radius:3px; }
+.bids li.best span{ color:var(--sprout); }
+.bids li.best i::after{ background:var(--sprout); }
+.spark{ width:100%; height:44px; margin-top:.8rem; display:block; }
+.pl{ display:flex; height:10px; border-radius:6px; overflow:hidden; margin:.2rem 0 1rem; }
+.pl span:first-child{ background:var(--clay); }
+.pl span:last-child{ background:var(--sprout); }
+
+.hero .copy{ max-width:40rem; }
+.cue{ position:absolute; left:6vw; bottom:calc(env(safe-area-inset-bottom,0px) + 7vh); display:flex; align-items:center; gap:.8rem; font-family:var(--display); font-size:.9rem; color:var(--mist-3); }
+.cue i{ width:48px; height:1px; background:var(--mist-3); position:relative; overflow:hidden; }
+.cue i::after{ content:""; position:absolute; inset:0; background:var(--wheat); transform:translateX(-100%); animation:cue 2.4s ease-in-out infinite; }
+@keyframes cue{ 50%{ transform:translateX(0);} 100%{ transform:translateX(100%);} }
+
+.problems .copy, .platform .copy{ max-width:34rem; }
+.broken{ display:flex; flex-wrap:wrap; gap:.45rem; margin-top:1.6rem; max-width:30rem; }
+.broken span{ font-family:var(--display); font-size:.85rem; padding:.32rem .7rem; border-radius:8px; border:1px dashed rgba(192,122,106,.55); color:var(--mist-2); }
+.platform .broken span{ border:1px solid rgba(168,201,127,.45); color:var(--mist); background:rgba(168,201,127,.08); }
+
+/* ---------- simulator ---------- */
+.sim{ align-items:flex-start; padding-top:16vh; padding-bottom:16vh; }
+.sim-col{ width:min(39rem,100%); }
+.whatif{ font-family:var(--display); font-weight:800; font-size:clamp(4.2rem,12vw,10.5rem); line-height:.82; letter-spacing:-.06em; margin:0 0 1.3rem; font-variation-settings:'opsz' 96; }
+.whatif span{ display:inline-block; }
+.sim .lede{ margin-bottom:2rem; }
+.panel{ border-radius:22px; padding:1.4rem 1.5rem; margin-bottom:1rem; box-shadow:0 30px 80px -34px rgba(0,0,0,.6); }
+.scenario{ font-family:var(--display); font-weight:600; font-size:clamp(1.25rem,2.4vw,1.6rem); letter-spacing:-.02em; margin:0 0 1.3rem; line-height:1.25; }
+.scenario i{ font-style:normal; color:var(--wheat); padding:0 .15em; }
+.field{ display:grid; grid-template-columns:1fr auto; align-items:baseline; gap:.3rem 1rem; margin-bottom:1.15rem; }
+.field:last-child{ margin-bottom:0; }
+.field label{ font-size:.92rem; color:var(--mist-2); }
+.field output{ font-family:var(--display); font-weight:600; font-variant-numeric:tabular-nums; font-size:1.02rem; }
+.field input{ grid-column:1 / -1; }
+input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:26px; background:transparent; margin:0; cursor:pointer; }
+input[type=range]::-webkit-slider-runnable-track{ height:4px; border-radius:4px; background:linear-gradient(90deg, var(--fill,var(--wheat)) 0 var(--p,50%), rgba(232,236,226,.16) var(--p,50%) 100%); }
+input[type=range]::-moz-range-track{ height:4px; border-radius:4px; background:rgba(232,236,226,.16); }
+input[type=range]::-moz-range-progress{ height:4px; border-radius:4px; background:var(--fill,var(--wheat)); }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:22px; height:22px; margin-top:-9px; border-radius:50%; background:var(--mist); border:5px solid var(--fill,var(--wheat)); box-shadow:0 0 0 6px rgba(227,180,95,.12); }
+input[type=range]::-moz-range-thumb{ width:13px; height:13px; border-radius:50%; background:var(--mist); border:5px solid var(--fill,var(--wheat)); }
+#water{ --fill:var(--rain); }
+.water-scale{ grid-column:1/-1; display:flex; justify-content:space-between; font-size:.74rem; color:var(--mist-3); margin-top:-.1rem; }
+
+.res{ display:grid; grid-template-columns:7.6rem repeat(3,minmax(0,1fr)); }
+.res > div{ padding:.72rem .6rem; }
+.res .hd{ font-family:var(--display); font-weight:620; font-size:1rem; display:flex; align-items:center; gap:.45rem; padding-top:.2rem; padding-bottom:.9rem; }
+.res .hd i{ width:10px; height:10px; border-radius:3px; flex:none; }
+.res .lb{ position:relative; padding-left:1.35rem; font-size:.9rem; color:var(--mist-2); }
+.res .lb::before{ content:""; position:absolute; left:.2rem; top:1.12rem; width:7px; height:7px; border-radius:50%; background:var(--wheat); }
+.res .lb::after{ content:""; position:absolute; left:calc(.2rem + 3px); top:1.7rem; bottom:-.95rem; width:1px; background:rgba(227,180,95,.35); }
+.res .lb.last::after{ display:none; }
+.res .c{ border-top:1px solid rgba(232,236,226,.07); transition:background .4s; }
+.res .c.best, .res .hd.best{ background:rgba(168,201,127,.09); }
+.res .hd.best{ border-radius:12px 12px 0 0; }
+.res .c.best.bottom{ border-radius:0 0 12px 12px; }
+.res .v{ font-family:var(--display); font-weight:580; font-size:1.02rem; font-variant-numeric:tabular-nums; letter-spacing:-.01em; line-height:1.2; }
+.res .v.neg{ color:#E0A08F; }
+.res .s{ font-size:.74rem; color:var(--mist-3); line-height:1.3; margin-top:.1rem; min-height:1em; }
+.res .b{ height:4px; border-radius:4px; background:rgba(232,236,226,.09); margin-top:.45rem; overflow:hidden; }
+.res .b span{ display:block; height:100%; width:0; border-radius:4px; transition:width .6s cubic-bezier(.2,.8,.2,1); }
+.pick{ border-radius:18px; padding:1.25rem 1.4rem; background:rgba(168,201,127,.1); border:1px solid rgba(168,201,127,.32); }
+.pick h3{ font-family:var(--display); font-weight:620; font-size:1.45rem; letter-spacing:-.025em; margin:0 0 .4rem; }
+.pick h3 strong{ color:var(--sprout); font-weight:700; }
+.pick p{ margin:0; color:var(--mist-2); font-size:.98rem; line-height:1.55; }
+.fine{ font-size:.8rem; color:var(--mist-3); margin:1rem .2rem 0; line-height:1.5; }
+
+/* ---------- final ---------- */
+.final{ min-height:135vh; flex-direction:column; justify-content:center; text-align:center; }
+.final::before{ content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(50% 42% at 50% 50%, rgba(10,48,28,.55), rgba(10,48,28,0)); }
+.final > *{ position:relative; }
+.brand{ font-family:var(--display); font-weight:780; font-size:clamp(3.8rem,15vw,14rem); line-height:.85; letter-spacing:-.06em; margin:0; font-variation-settings:'opsz' 96; }
+.brand span{ display:inline-block; }
+.tagline{ font-family:var(--display); font-weight:520; font-size:clamp(1.4rem,3.2vw,2.5rem); letter-spacing:-.025em; margin:1.4rem 0 .5rem; }
+.sub{ font-style:italic; color:var(--mist-2); font-size:clamp(1.05rem,1.6vw,1.3rem); margin:0 0 2.2rem; }
+.legend{ display:flex; flex-wrap:wrap; justify-content:center; gap:.5rem 1.4rem; margin:2.6rem 0 0; padding:0; list-style:none; font-family:var(--display); font-size:.9rem; color:var(--mist-2); }
+.legend li{ display:flex; align-items:center; gap:.45rem; }
+.legend i{ width:9px; height:9px; border-radius:50%; }
+.foot{ margin-top:3rem; font-size:.78rem; color:var(--mist-3); }
+
+/* ---------- loader ---------- */
+.loader{ position:fixed; inset:0; z-index:60; background:var(--night); display:grid; place-items:center; transition:opacity .9s ease, visibility .9s; }
+.loader.done{ opacity:0; visibility:hidden; }
+.loader div{ display:grid; justify-items:center; gap:1rem; font-family:var(--display); color:var(--mist-2); font-size:.95rem; }
+.loader svg{ width:44px; height:44px; animation:breathe 2s ease-in-out infinite; }
+.loader i{ width:140px; height:2px; border-radius:2px; background:rgba(232,236,226,.12); overflow:hidden; position:relative; }
+.loader i::after{ content:""; position:absolute; inset:0; width:40%; background:var(--sprout); animation:load 1.3s ease-in-out infinite; }
+@keyframes load{ from{ transform:translateX(-100%);} to{ transform:translateX(260%);} }
+@keyframes breathe{ 50%{ transform:scale(.9); opacity:.7; } }
+
+/* ---------- small screens ---------- */
+@media (max-width: 760px){
+  .scrim{ background:linear-gradient(0deg, rgba(10,48,28,.9) 0%, rgba(10,48,28,.5) 42%, rgba(10,48,28,0) 72%); }
+  .scene{ flex-direction:column; justify-content:flex-end; align-items:stretch; padding:18vh 1.25rem 16vh; }
+  .hero{ padding-bottom:22vh; }
+  .data{ position:relative; right:auto; top:auto; transform:none; width:100%; margin-top:1.4rem; }
+  .bar .btn{ padding:.6rem .95rem; font-size:.85rem; }
+  .track{ gap:0; padding:.35rem; }
+  .track a{ font-size:0; padding:0; width:22px; height:22px; display:grid; place-items:center; }
+  .track a::before{ content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
+  .track a.on{ background:transparent; color:var(--sprout); }
+  .track a.on::before{ width:10px; height:10px; }
+  .sim{ justify-content:flex-start; padding-top:14vh; }
+  .res{ grid-template-columns:5.2rem repeat(3,minmax(0,1fr)); }
+  .res > div{ padding:.6rem .3rem; }
+  .res .lb{ padding-left:1.05rem; font-size:.8rem; }
+  .res .v{ font-size:.86rem; }
+  .res .hd{ font-size:.84rem; }
+  .panel{ padding:1.15rem 1rem; }
+  .cue{ left:1.25rem; }
+  .final{ justify-content:center; }
+}
+@media (prefers-reduced-motion: reduce){
+  .cue i::after, .loader svg, .loader i::after{ animation:none; }
+}
+
+/* ================= unified AgriNexus theme (matches pitch + farmer app) ================= */
+body{ font-weight:300; }
+.lede, .data .note, .pick p, .hub-card p, .howto p{ font-weight:300; }
+.display, h2, .whatif, .brand, .tagline, .scenario, .pick h3, .hub-card h3, .howto h4, .sheet a, .logo, .data dd, .res .v, .res .hd{
+  font-family:var(--heading); font-style:italic; font-weight:400; font-variation-settings:normal; }
+.display{ font-size:clamp(3.4rem,8vw,6.4rem); line-height:.84; letter-spacing:-.035em; }
+h2{ font-size:clamp(2.6rem,5.4vw,4.6rem); line-height:.9; letter-spacing:-.03em; }
+.whatif{ letter-spacing:-.045em; line-height:.8; }
+.brand{ letter-spacing:-.05em; line-height:.8; }
+.tagline{ font-size:clamp(1.8rem,3.6vw,2.9rem); letter-spacing:-.02em; }
+.scenario{ font-size:clamp(1.6rem,2.8vw,2rem); }
+.logo{ font-size:1.55rem; letter-spacing:-.02em; }
+.data dd{ font-size:1.75rem; letter-spacing:-.01em; }
+.res .v{ font-size:1.3rem; }
+.res .hd{ font-size:1.25rem; }
+.pick h3{ font-size:2rem; }
+.pick h3 strong{ font-weight:400; }
+.hub-card h3{ font-size:clamp(2rem,3vw,2.6rem); letter-spacing:-.02em; }
+.howto h4{ font-size:1.5rem; }
+.sheet a{ font-size:2.3rem; }
+.step{ color:var(--mist-2); font-weight:500; }
+.step span{ border-color:rgba(255,255,255,.4); }
+
+/* liquid-glass surfaces with gradient-stroke edges */
+.data, .panel, .navpill, .track, .hub-card, .howto div, .quick a, .btn:not(.solid), .pick, .loader div{
+  background:rgba(8,34,16,.42); border:none !important; box-shadow:inset 0 1px 1px rgba(255,255,255,.14), 0 24px 60px -30px rgba(0,0,0,.55); }
+.hub-card.main{ background:linear-gradient(160deg, rgba(90,150,55,.5), rgba(8,34,16,.55) 60%); }
+.panel, .navpill, .hub-card, .howto div, .quick a, .btn, .pick{ position:relative; }
+.data::before, .panel::before, .navpill::before, .track::before, .hub-card::before, .howto div::before, .quick a::before, .btn:not(.solid)::before, .pick::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1.3px; pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.5) 0%, rgba(255,255,255,.16) 22%, rgba(255,255,255,0) 42%, rgba(255,255,255,0) 60%, rgba(255,255,255,.14) 80%, rgba(255,255,255,.42) 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
+.btn{ font-family:var(--text); font-weight:500; }
+.btn.solid{ background:#fff; color:#1E4D22; box-shadow:0 12px 28px -14px rgba(0,0,0,.55); }
+.btn.solid:hover{ background:#F2FAE6; }
+.track a.on{ background:#fff; color:#1E4D22; }
+.howto b{ background:#fff; color:#1E4D22; font-family:var(--text); }
+.quick a{ font-family:var(--text); font-weight:500; }
+.hub-card .kind, .data h3 em, .pick h3 strong{ color:#C9EE8C; }
+input[type=range]::-webkit-slider-thumb{ border-color:#fff; background:#1E4D22; }
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader" role="status">
+  <div>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><ellipse cx="22" cy="24" rx="8" ry="11" fill="#B98A5E"/><path d="M22 13c0-6 4-9 9-9-1 5-4 8-9 9z" fill="#A8C97F"/></svg>
+    <span>Preparing the field</span>
+    <i></i>
+  </div>
+</div>
+
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="vig"></div>
+<div class="scrim"></div>
+<div id="labels" aria-hidden="true"></div>
+
+<header class="bar">
+  <a class="logo" href="#top" aria-label="AgriNexus home">
+    <svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="4.2" fill="#A8C97F"/><g stroke="#E3B45F" stroke-width="1.6" stroke-linecap="round"><path d="M15 10.8V3.5M18.6 17.1l6.3 3.7M11.4 17.1l-6.3 3.7"/></g><g fill="#E8ECE2"><circle cx="15" cy="3.2" r="2"/><circle cx="25.2" cy="21" r="2"/><circle cx="4.8" cy="21" r="2"/></g></svg>
+    AgriNexus
+  </a>
+  <nav class="navpill" aria-label="Site">
+    <a href="#plan">The story</a><a href="#simulator">Simulator</a><a href="#start">Get started</a>
+    <a data-site="pitch" href="https://claude.ai/artifact/RoEruk2N98L7q6XNmTKgT5" target="_blank" rel="noopener">Pitch</a>
+  </nav>
+  <div class="navright">
+    <a data-site="app" class="btn solid" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63" target="_blank" rel="noopener">Farmer App <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+    <button class="btn menubtn" id="menuBtn" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</header>
+
+<div class="sheet" id="sheet" role="dialog" aria-label="Menu">
+  <a href="#plan">The story <small>Seed to sale</small></a>
+  <a href="#simulator">Simulator <small>What if?</small></a>
+  <a href="#start">Get started <small>All links</small></a>
+  <a data-site="pitch" href="https://claude.ai/artifact/RoEruk2N98L7q6XNmTKgT5" target="_blank" rel="noopener">Pitch <small>For judges and partners</small></a>
+  <a data-site="app" class="btn solid" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63" target="_blank" rel="noopener">Open the Farmer App <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+</div>
+
+<nav class="track" aria-label="Farming lifecycle">
+  <a href="#plan">Plan</a><a href="#grow">Grow</a><a href="#monitor">Monitor</a><a href="#harvest">Harvest</a><a href="#store">Store</a><a href="#transport">Transport</a><a href="#sell">Sell</a><a href="#profit">Profit</a><a href="#reuse">Reuse</a>
+</nav>
+
+<main>
+  <section class="scene hero" data-key="seed" id="top">
+    <div class="copy">
+      <h1 class="display split">Every season starts with one seed.</h1>
+      <p class="lede">Follow it from the soil to the sale, and see where a season is won or lost.</p>
+      <div class="hero-ctas">
+        <a data-site="app" class="btn solid" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63" target="_blank" rel="noopener">Open the Farmer App <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+        <a class="btn" href="#start">Everything in one place</a>
+      </div>
+    </div>
+    <div class="cue" aria-hidden="true"><i></i>Scroll to plant it</div>
+  </section>
+
+  <section class="scene" data-key="soil">
+    <div class="copy">
+      <h2 class="split">It starts below ground.</h2>
+      <p class="lede">AgriNexus reads each plot's pH, nutrients and moisture, so the first decision, what to plant, rests on evidence instead of habit.</p>
+    </div>
+    <aside class="data glass" aria-label="Soil test">
+      <h3>Plot B soil test <em>Today</em></h3>
+      <dl>
+        <div><dt>pH</dt><dd>6.4</dd></div>
+        <div><dt>Nitrogen</dt><dd>212 <small>kg/ha</small></dd></div>
+        <div><dt>Moisture</dt><dd>17%</dd></div>
+        <div><dt>Organic carbon</dt><dd>0.58% <small>low</small></dd></div>
+      </dl>
+      <p class="note"><strong>Suggested:</strong> 2 t/acre farmyard manure before sowing.</p>
+    </aside>
+  </section>
+
+  <section class="scene" data-key="grow">
+    <div class="copy">
+      <h2 class="split">Then it takes root.</h2>
+      <p class="lede">Irrigation follows the crop's growth stage and tomorrow's forecast, not a fixed calendar. Water goes where the roots actually are.</p>
+    </div>
+    <aside class="data glass" aria-label="Irrigation">
+      <h3>Next irrigation <em>Plot B</em></h3>
+      <dl>
+        <div><dt>When</dt><dd>Thu <small>6:00 am</small></dd></div>
+        <div><dt>Amount</dt><dd>22 <small>mm drip</small></dd></div>
+        <div><dt>Rain chance</dt><dd>18%</dd></div>
+        <div><dt>Root depth</dt><dd>14 <small>cm</small></dd></div>
+      </dl>
+    </aside>
+  </section>
+
+  <section class="scene" data-key="farm">
+    <div class="copy">
+      <h2 class="split">Soon it's a whole farm.</h2>
+      <p class="lede">Soil, water, crop, labour, machinery, monitoring, harvest, storage, logistics, market, profit, waste and sustainability. Thirteen moving parts, and usually one person keeping track of all of them.</p>
+    </div>
+  </section>
+
+  <section class="scene cycle" data-key="plan" id="plan">
+    <div class="copy">
+      <p class="step"><span>1</span>Plan</p>
+      <h2 class="split">Plan the season before spending on it.</h2>
+      <p class="lede">Crop mix, inputs and cash flow are worked out against your soil, water and budget before a single seed is bought.</p>
+    </div>
+    <aside class="data glass" aria-label="Season plan">
+      <h3>Kharif plan <em>5 acres</em></h3>
+      <dl>
+        <div><dt>Groundnut</dt><dd>3 <small>acres</small></dd></div>
+        <div><dt>Maize</dt><dd>2 <small>acres</small></dd></div>
+        <div><dt>Inputs</dt><dd>₹46,200</dd></div>
+        <div><dt>Expected profit</dt><dd>₹1.6 <small>lakh</small></dd></div>
+      </dl>
+    </aside>
+  </section>
+
+  <section class="scene cycle" data-key="grow2" id="grow">
+    <div class="copy">
+      <p class="step"><span>2</span>Grow</p>
+      <h2 class="split">Book hands and machines when the field is ready.</h2>
+      <p class="lede">Labour and machinery are scheduled around the crop, and shared with neighbours when a full day's hire doesn't make sense.</p>
+    </div>
+    <aside class="data glass" aria-label="Bookings">
+      <h3>This week <em>Confirmed</em></h3>
+      <dl class="one">
+        <div><dt>Tractor with rotavator</dt><dd>Tue 7:00 <small>2 h, ₹1,800</small></dd></div>
+        <div><dt>Weeding crew</dt><dd>4 workers <small>Wed</small></dd></div>
+        <div><dt>Seed drill</dt><dd>Shared <small>with 3 farms</small></dd></div>
+      </dl>
+    </aside>
+  </section>
+
+  <section class="scene cycle" data-key="monitor" id="monitor">
+    <div class="copy">
+      <p class="step"><span>3</span>Monitor</p>
+      <h2 class="split">See trouble while it's still small.</h2>
+      <p class="lede">Drone and satellite scans track crop health plot by plot, and flag pests and disease before they show from the road.</p>
+    </div>
+    <aside class="data glass" aria-label="Crop health">
+      <h3>Drone scan <em>Plot A</em></h3>
+      <dl>
+        <div><dt>Crop vigour</dt><dd>0.71 <small>NDVI</small></dd></div>
+        <div><dt>Leaf spot risk</dt><dd>34%</dd></div>
+      </dl>
+      <p class="note"><strong>Action:</strong> spray the north half Friday morning, when wind is under 8 km/h.</p>
+    </aside>
+  </section>
+
+  <section class="scene cycle" data-key="harvest" id="harvest">
+    <div class="copy">
+      <p class="step"><span>4</span>Harvest</p>
+      <h2 class="split">Harvest on the right day, not the free one.</h2>
+      <p class="lede">Grain moisture, weather and harvester availability are weighed together to pick the window with the least loss.</p>
+    </div>
+    <aside class="data glass" aria-label="Harvest window">
+      <h3>Harvest window <em>Ready</em></h3>
+      <dl>
+        <div><dt>Grain moisture</dt><dd>14.2%</dd></div>
+        <div><dt>Best window</dt><dd>12–15 <small>Oct</small></dd></div>
+        <div><dt>Combine slot</dt><dd>Booked</dd></div>
+        <div><dt>Loss avoided</dt><dd>~6%</dd></div>
+      </dl>
+    </aside>
+  </section>
+
+  <section class="scene cycle" data-key="store" id="store">
+    <div class="copy">
+      <p class="step"><span>5</span>Store</p>
+      <h2 class="split">Store it without losing it.</h2>
+      <p class="lede">Sensors watch moisture and temperature in storage, and a warehouse receipt lets you borrow against the crop instead of selling in a glut.</p>
+    </div>
+    <aside class="data glass" aria-label="Storage">
+      <h3>Silo 2 <em>Stable</em></h3>
+      <dl>
+        <div><dt>Moisture</dt><dd>11.8%</dd></div>
+        <div><dt>Temperature</dt><dd>27°C</dd></div>
+        <div><dt>In storage</dt><dd>48 <small>quintals</small></dd></div>
+        <div><dt>Loan available</dt><dd>₹1.1 <small>lakh</small></dd></div>
+      </dl>
+    </aside>
+  </section>
+
+  <section class="scene cycle" data-key="transport" id="transport">
+    <div class="copy">
+      <p class="step"><span>6</span>Transport</p>
+      <h2 class="split">Share the truck, split the cost.</h2>
+      <p class="lede">Loads from nearby farms are pooled into one route, so a small harvest travels at a big harvest's rate.</p>
+    </div>
+    <aside class="data glass" aria-label="Transport">
+      <h3>Pooled load <em>3 farms</em></h3>
+      <dl>
+        <div><dt>Distance</dt><dd>62 <small>km</small></dd></div>
+        <div><dt>Departs</dt><dd>Sat <small>5:30 am</small></dd></div>
+        <div><dt>Cost per quintal</dt><dd>₹38</dd></div>
+        <div><dt>Going alone</dt><dd>₹71</dd></div>
+      </dl>
+    </aside>
+  </section>
+
+  <section class="scene cycle" data-key="sell" id="sell">
+    <div class="copy">
+      <p class="step"><span>7</span>Sell</p>
+      <h2 class="split">Sell to the best bid, not the nearest one.</h2>
+      <p class="lede">Mandi prices, trader bids and processor contracts sit side by side, with the price trend for the week ahead.</p>
+    </div>
+    <aside class="data glass" aria-label="Bids">
+      <h3>Groundnut bids <em>per quintal</em></h3>
+      <ul class="bids">
+        <li><em>Local trader</em><span>₹6,150</span><i style="--w:72%"></i></li>
+        <li><em>APMC market</em><span>₹6,620</span><i style="--w:86%"></i></li>
+        <li class="best"><em>Oil processor</em><span>₹6,940</span><i style="--w:100%"></i></li>
+      </ul>
+      <svg class="spark" viewBox="0 0 200 44" preserveAspectRatio="none" aria-label="Price rising over the last two weeks"><polyline fill="none" stroke="#E3B45F" stroke-width="2" points="0,34 22,36 44,30 66,31 88,26 110,27 132,20 154,18 176,12 200,9"/></svg>
+    </aside>
+  </section>
+
+  <section class="scene cycle" data-key="profit" id="profit">
+    <div class="copy">
+      <p class="step"><span>8</span>Profit</p>
+      <h2 class="split">Know what you actually made.</h2>
+      <p class="lede">Every rupee from seed to sale is tracked automatically, so the season closes with a real profit figure, per acre and per crop.</p>
+    </div>
+    <aside class="data glass" aria-label="Season result">
+      <h3>Season result <em>5 acres</em></h3>
+      <div class="pl" aria-hidden="true"><span style="width:43%"></span><span style="width:57%"></span></div>
+      <dl>
+        <div><dt>Revenue</dt><dd>₹3.28 <small>lakh</small></dd></div>
+        <div><dt>Costs</dt><dd>₹1.41 <small>lakh</small></dd></div>
+        <div><dt>Profit</dt><dd>₹1.87 <small>lakh</small></dd></div>
+        <div><dt>Per acre</dt><dd>₹37,400</dd></div>
+      </dl>
+    </aside>
+  </section>
+
+  <section class="scene cycle" data-key="reuse" id="reuse">
+    <div class="copy">
+      <p class="step"><span>9</span>Reuse</p>
+      <h2 class="split">Then the field feeds the next season.</h2>
+      <p class="lede">Crop residue goes to compost and biogas instead of being burned, and the nutrients go back into the soil you started with.</p>
+    </div>
+    <aside class="data glass" aria-label="Residue reuse">
+      <h3>Residue plan <em>6.2 t</em></h3>
+      <dl>
+        <div><dt>To compost</dt><dd>4.1 <small>t</small></dd></div>
+        <div><dt>To biogas</dt><dd>2.1 <small>t</small></dd></div>
+        <div><dt>Nitrogen saved</dt><dd>~18 <small>kg/acre</small></dd></div>
+        <div><dt>Burning avoided</dt><dd>100%</dd></div>
+      </dl>
+    </aside>
+  </section>
+
+  <section class="scene problems" data-key="problems">
+    <div class="copy">
+      <h2 class="split">Today, none of it talks to each other.</h2>
+      <p class="lede">The soil test is a paper report. Water is a guess. Labour is a phone call. The price is whatever the trader says that morning. Each decision gets made alone, and the mistakes add up at harvest.</p>
+      <div class="broken" aria-hidden="true"><span>Soil report</span><span>Borewell diary</span><span>Labour contractor</span><span>Tractor owner</span><span>Trader's price</span><span>Loan papers</span></div>
+    </div>
+  </section>
+
+  <section class="scene platform" data-key="platform">
+    <div class="copy">
+      <h2 class="split">AgriNexus connects all thirteen.</h2>
+      <p class="lede">One AI model sees the whole season. Change the water, the budget or the crop, and every number downstream changes with it, from labour days to the final profit.</p>
+      <div class="broken" aria-hidden="true"><span>Soil</span><span>Water</span><span>Crop</span><span>Labour</span><span>Machinery</span><span>Monitoring</span><span>Harvest</span><span>Storage</span><span>Logistics</span><span>Market</span><span>Profit</span><span>Waste</span><span>Sustainability</span></div>
+    </div>
+  </section>
+
+  <section class="scene sim" data-key="simulator" id="simulator" aria-labelledby="whatif">
+    <div class="sim-col">
+      <h2 class="whatif" id="whatif"><span>WHAT</span> <span>IF?</span></h2>
+      <p class="lede">Describe your land. The simulator follows each crop through the whole chain, from water to profit, and the test plots respond as you change it.</p>
+
+      <div class="panel glass">
+        <p class="scenario" id="scenario" aria-live="polite">5 acres <i>+</i> limited water <i>+</i> ₹50,000</p>
+        <div class="field">
+          <label for="acres">Land</label><output id="acresOut" for="acres">5 acres</output>
+          <input type="range" id="acres" min="1" max="20" step="0.5" value="5">
+        </div>
+        <div class="field">
+          <label for="water">Water available this season</label><output id="waterOut" for="water">450 mm</output>
+          <input type="range" id="water" min="200" max="1400" step="10" value="450">
+          <div class="water-scale" aria-hidden="true"><span>Scarce</span><span>Limited</span><span>Adequate</span><span>Abundant</span></div>
+        </div>
+        <div class="field">
+          <label for="budget">Budget for inputs</label><output id="budgetOut" for="budget">₹50,000</output>
+          <input type="range" id="budget" min="10000" max="300000" step="5000" value="50000">
+        </div>
+      </div>
+
+      <div class="panel glass">
+        <div class="res" id="res" role="table" aria-label="Crop comparison"></div>
+      </div>
+
+      <div class="pick" id="pick" aria-live="polite"></div>
+      <p class="fine">Same crop numbers as the live Farmer App below, so this preview and your real plan always agree. Illustrative model built from typical Indian yields, MSP-level prices and FAO water-stress response factors. Real recommendations use your soil test, local rainfall and market data.</p>
+    </div>
+  </section>
+
+  <section class="scene final" data-key="final" id="final">
+    <h2 class="brand" aria-label="AgriNexus"><span>Agri</span><span>Nexus</span></h2>
+    <p class="tagline">One Platform. Your Entire Farm.</p>
+    <p class="sub">Plan smarter. Farm better. Grow sustainably.</p>
+    <div><a class="btn solid" href="#start">Get started</a></div>
+    <ul class="legend" aria-label="Who is connected">
+      <li><i style="background:#A8C97F"></i>Farmers</li>
+      <li><i style="background:#E3B45F"></i>Buyers</li>
+      <li><i style="background:#7DB8C9"></i>Markets</li>
+      <li><i style="background:#E8ECE2"></i>Logistics</li>
+      <li><i style="background:#C9A27E"></i>Businesses</li>
+    </ul>
+    <p class="foot">Figures on this page are illustrative.</p>
+  </section>
+
+  <section class="scene hub" data-key="final" id="start" aria-labelledby="startTitle">
+    <div class="hub-head">
+      <h2 id="startTitle" class="split">Everything in one place.</h2>
+      <p class="lede">Farmers start with the app. Judges, partners and investors start with the pitch.</p>
+    </div>
+    <div class="hub-grid">
+      <div class="hub-card main">
+        <span class="kind">For farmers</span>
+        <h3>AgriNexus Farmer App</h3>
+        <p>Plan your season, ask the AI anything, diagnose a sick crop from a photo, and learn from other farmers. It's free, and works in English, Tamil and Hindi.</p>
+        <div class="quick">
+          <a data-site="app#plan" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63#plan" target="_blank" rel="noopener"><span>🌾</span><div>My Plan<small>Compare crops</small></div></a>
+          <a data-site="app#ai" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63#ai" target="_blank" rel="noopener"><span>🤖</span><div>Ask AI<small>Questions and photos</small></div></a>
+          <a data-site="app#network" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63#network" target="_blank" rel="noopener"><span>🗣️</span><div>Farmer Network<small>Ask other farmers</small></div></a>
+          <a data-site="app#doctor" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63#doctor" target="_blank" rel="noopener"><span>📷</span><div>Crop Doctor<small>Check a crop photo</small></div></a>
+        </div>
+        <a data-site="app" class="btn solid" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63" target="_blank" rel="noopener" style="align-self:flex-start">Open the Farmer App <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+      </div>
+      <a data-site="pitch" class="hub-card" href="https://claude.ai/artifact/RoEruk2N98L7q6XNmTKgT5" target="_blank" rel="noopener">
+        <span class="kind">For judges, partners and investors</span>
+        <h3>The pitch</h3>
+        <p>The problem, the product, the business model and the roadmap. Press P on that page to present it as slides.</p>
+        <span class="go">View the pitch <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></span>
+      </a>
+      <a data-site="app#admin" class="hub-card" href="https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63#admin" target="_blank" rel="noopener">
+        <span class="kind">For FPOs, KVKs and research teams</span>
+        <h3>Research console</h3>
+        <p>Update crop data and prices, post advisories to every farmer, and see what your members are planting. Needs editor access.</p>
+        <span class="go">Open the console <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></span>
+      </a>
+    </div>
+    <div class="howto" aria-label="How a farmer gets started">
+      <div><b>1</b><h4>Open the app</h4><p>Tap Open the Farmer App and choose your language at the top.</p></div>
+      <div><b>2</b><h4>Tell it about your farm</h4><p>Move the sliders for land, water and budget, then tap Compare crops.</p></div>
+      <div><b>3</b><h4>Save and ask</h4><p>Save your plan, then ask the AI or other farmers anything about your season.</p></div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+(() => {
+'use strict';
+/* ---- site links: edit these three lines to re-point every link on this page ---- */
+const SITE_LINKS = {
+  home:  'https://claude.ai/artifact/JVW3Gpqzek7UZuoNH1yUxT',
+  app:   'https://claude.ai/artifact/AR7Y6Zt6xqz6JmasKU3V63',
+  pitch: 'https://claude.ai/artifact/RoEruk2N98L7q6XNmTKgT5'
+};
+document.querySelectorAll('[data-site]').forEach(a => {
+  const [key, hash] = a.dataset.site.split('#');
+  if (SITE_LINKS[key]) a.href = SITE_LINKS[key] + (hash ? '#' + hash : '');
+});
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const LOW = matchMedia('(pointer: coarse)').matches || innerWidth < 760;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const mix = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* =====================================================================
+   1. AI FARM SIMULATOR (pure DOM, works even without WebGL)
+   ===================================================================== */
+// same figures as the live Farmer App's crop database, so this preview and the real tool always agree
+const CROPS = [
+  { id:'paddy', name:'Paddy', need:1200, ky:1.2, maxY:24, price:2300, cost:26000, risk:18, sus:40, nfix:false, color:'#E3B45F' },
+  { id:'groundnut', name:'Groundnut', need:500, ky:0.7, maxY:10, price:6780, cost:28000, risk:24, sus:82, nfix:true, color:'#C9A27E' },
+  { id:'maize', name:'Maize', need:550, ky:1.25, maxY:28, price:2225, cost:20000, risk:22, sus:66, nfix:false, color:'#A8C97F' }
+];
+const L_PER_MM_ACRE = 4046.86;
+const inr = n => (n < 0 ? '−₹' : '₹') + Math.round(Math.abs(n)).toLocaleString('en-IN');
+const inrShort = n => { const a = Math.abs(n), s = n < 0 ? '−₹' : '₹'; return a >= 1e5 ? s + (a / 1e5).toFixed(a >= 1e6 ? 0 : 1) + 'L' : s + Math.round(a / 1000) + 'k'; };
+const waterWord = w => w < 350 ? 'scarce' : w < 650 ? 'limited' : w < 1000 ? 'adequate' : 'abundant';
+const riskWord = r => r < 35 ? 'Low' : r < 60 ? 'Medium' : 'High';
+
+function simulate(acres, water, budget) {
+  const out = CROPS.map(c => {
+    const planted = Math.min(acres, budget / c.cost);
+    const r = Math.min(1, water / c.need);
+    const yf = Math.max(0, 1 - c.ky * (1 - r));
+    const yieldQ = c.maxY * yf * planted;
+    const revenue = yieldQ * c.price;
+    const cost = c.cost * planted;
+    const profit = revenue - cost;
+    const short = planted < acres - 0.01;
+    const risk = clamp(c.risk + (1 - r) * c.ky * 55 + (short ? 6 : 0), 5, 95);
+    const sus = clamp(c.sus - (1 - r) * 12, 0, 100);
+    const waterML = Math.min(water, c.need) * planted * L_PER_MM_ACRE / 1e6;
+    return { ...c, planted, r, yf, yieldQ, revenue, cost, profit, risk, sus, waterML, short, plantedFrac: planted / acres };
+  });
+  out.forEach(c => { c.score = c.profit * (1 - c.risk / 150) + c.sus * 600; });
+  const best = out.reduce((a, b) => b.score > a.score ? b : a);
+  return { out, best };
+}
+
+const ROWS = [
+  { k:'water', label:'Water', v:c => `${c.need} mm`, s:c => `${Math.round(c.r * 100)}% covered, ${c.waterML.toFixed(1)} ML used`, bar:c => c.r, color:() => '#7DB8C9' },
+  { k:'cost', label:'Cost', v:c => inr(c.cost), s:(c, A) => c.short ? `funds ${c.planted.toFixed(1)} of ${A} ac` : `all ${A} acres`, bar:(c, M) => c.cost / M.cost },
+  { k:'yield', label:'Yield', v:c => `${Math.round(c.yieldQ)} q`, s:c => `${(c.yieldQ / Math.max(c.planted, .01)).toFixed(1)} q/acre`, bar:(c, M) => c.yieldQ / M.yieldQ },
+  { k:'revenue', label:'Revenue', v:c => inr(c.revenue), s:c => `at ${inr(c.price)}/q`, bar:(c, M) => c.revenue / M.revenue },
+  { k:'profit', label:'Profit', v:c => inr(c.profit), s:() => '', bar:(c, M) => Math.abs(c.profit) / M.profit },
+  { k:'risk', label:'Risk', v:c => `${riskWord(c.risk)} ${Math.round(c.risk)}`, s:c => c.r < 1 ? 'water stress' : 'market only', bar:c => c.risk / 100, color:c => c.risk < 35 ? '#A8C97F' : c.risk < 60 ? '#E3B45F' : '#C07A6A' },
+  { k:'sus', label:'Sustainability', v:c => `${Math.round(c.sus)} / 100`, s:c => c.nfix ? 'fixes nitrogen' : c.id === 'rice' ? 'methane, high water' : 'moderate water', bar:c => c.sus / 100 }
+];
+
+const resEl = $('#res');
+const cells = {};
+(function buildTable() {
+  let html = '<div role="row" style="display:contents"><div class="hd" role="columnheader"></div>';
+  CROPS.forEach(c => { html += `<div class="hd" role="columnheader" data-col="${c.id}"><i style="background:${c.color}"></i>${c.name}</div>`; });
+  html += '</div>';
+  ROWS.forEach((r, ri) => {
+    html += `<div role="row" style="display:contents"><div class="lb${ri === ROWS.length - 1 ? ' last' : ''}" role="rowheader">${r.label}</div>`;
+    CROPS.forEach(c => { html += `<div class="c${ri === ROWS.length - 1 ? ' bottom' : ''}" role="cell" data-col="${c.id}" data-row="${r.k}"><div class="v"></div><div class="s"></div><div class="b"><span></span></div></div>`; });
+    html += '</div>';
+  });
+  resEl.innerHTML = html;
+  $$('.res .c').forEach(el => { cells[el.dataset.row + ':' + el.dataset.col] = { v: el.querySelector('.v'), s: el.querySelector('.s'), b: el.querySelector('.b span'), el }; });
+})();
+
+const inputs = { acres: $('#acres'), water: $('#water'), budget: $('#budget') };
+const simOut = { results: null };   // consumed by the 3D scene
+function paintRange(el) { const p = (el.value - el.min) / (el.max - el.min) * 100; el.style.setProperty('--p', p + '%'); }
+
+function updateSim() {
+  const A = +inputs.acres.value, W = +inputs.water.value, B = +inputs.budget.value;
+  Object.values(inputs).forEach(paintRange);
+  $('#acresOut').textContent = `${A} ${A === 1 ? 'acre' : 'acres'}`;
+  $('#waterOut').textContent = `${W} mm, ${waterWord(W)}`;
+  $('#budgetOut').textContent = inr(B);
+  $('#scenario').innerHTML = `${A} ${A === 1 ? 'acre' : 'acres'} <i>+</i> ${waterWord(W)} water <i>+</i> ${inr(B)}`;
+
+  const { out, best } = simulate(A, W, B);
+  const M = {
+    cost: Math.max(...out.map(c => c.cost)), yieldQ: Math.max(...out.map(c => c.yieldQ), 1),
+    revenue: Math.max(...out.map(c => c.revenue), 1), profit: Math.max(...out.map(c => Math.abs(c.profit)), 1)
+  };
+  out.forEach(c => {
+    ROWS.forEach(r => {
+      const cell = cells[r.k + ':' + c.id];
+      cell.v.textContent = r.v(c, A);
+      cell.s.textContent = r.s(c, A);
+      cell.v.classList.toggle('neg', r.k === 'profit' && c.profit < 0);
+      cell.b.style.width = (clamp(r.bar(c, M), 0, 1) * 100).toFixed(1) + '%';
+      cell.b.style.background = r.color ? r.color(c) : (r.k === 'profit' && c.profit < 0 ? '#C07A6A' : c.color);
+      cell.el.classList.toggle('best', c.id === best.id);
+    });
+  });
+  $$('.res .hd[data-col]').forEach(h => h.classList.toggle('best', h.dataset.col === best.id));
+
+  const waterBit = best.r >= 1 ? `It needs ${best.need} mm and you have ${W} mm` : `It gets ${Math.round(best.r * 100)}% of the ${best.need} mm it needs`;
+  const budgetBit = best.short ? `your budget covers ${best.planted.toFixed(1)} of ${A} acres` : `your budget covers all ${A} acres`;
+  const extra = best.nfix ? ', and it leaves nitrogen in the soil for next season' : '';
+  const runner = out.filter(c => c !== best).sort((a, b) => b.score - a.score)[0];
+  $('#pick').innerHTML = `<h3>AgriNexus suggests <strong>${best.name}</strong></h3><p>${waterBit}, ${budgetBit}${extra}. Expected profit ${inr(best.profit)} at ${riskWord(best.risk).toLowerCase()} risk. ${runner.name} comes next at ${inr(runner.profit)}.</p>`;
+  simOut.results = out;
+}
+Object.values(inputs).forEach(el => el.addEventListener('input', updateSim));
+updateSim();
+
+/* =====================================================================
+   2. SECTION MAP + CAMERA KEYFRAMES
+   ===================================================================== */
+const KEYS = {
+  seed:      { cam:[0, 1.3, 3.2],   look:[0, 1.05, .8], fog:.07, seedY:1.05, root:0, sprout:0, crop:0, farm:0, ripe:0, harvest:0, nodes:0, link:0, sim:0, eco:0, glow:1, tractor:0, drone:0, truck:0, day:.6 },
+  soil:      { cam:[.9, -.5, 3.0],  look:[0, -.75, .6], fog:.085, seedY:-.4, root:.85, sprout:.12, glow:.65 },
+  grow:      { cam:[1.6, .8, 3.7],  look:[0, .55, .6],  fog:.05, root:1, sprout:1, crop:.32, farm:.2, glow:.2, day:.85 },
+  farm:      { cam:[30, 22, 40],    look:[0, 0, 5],     fog:.0032, crop:.8, farm:1, glow:0, day:1 },
+  plan:      { cam:[-2, 36, 28],    look:[-1, 0, 9],    crop:.06 },
+  grow2:     { cam:[17, 4.5, 27],   look:[6, 1, 19],    crop:.55, tractor:1 },
+  monitor:   { cam:[-19, 7, 16],    look:[-9, 2.5, 4],  crop:1, drone:1 },
+  harvest:   { cam:[4, 9, 24],      look:[-1, 1, 8],    ripe:1, harvest:.55, drone:0 },
+  store:     { cam:[40, 9, 6],      look:[25, 3, -15],  harvest:1 },
+  transport: { cam:[44, 5, 9],      look:[54, 1.2, -3], truck:.4 },
+  sell:      { cam:[94, 10, 12],    look:[79, 1, -15],  truck:1 },
+  profit:    { cam:[36, 48, 56],    look:[18, 0, -2] },
+  reuse:     { cam:[4, 7, -6],      look:[13, 1, -23],  harvest:1, day:1 },
+  problems:  { cam:[0, 32, 60],     look:[0, 10, 0],    fog:.0026, nodes:1, link:0, harvest:0, ripe:0, crop:.9, truck:0, day:.9 },
+  platform:  { cam:[0, 28, 50],     look:[0, 11, 0],    link:1 },
+  simulator: { cam:[-40, 20, 80],   look:[-53, 1, 38],  fog:.003, sim:1, nodes:0, day:1 },
+  final:     { cam:[0, 240, 285],   look:[0, 0, -20],   fog:.0011, eco:1, sim:0, day:.85 }
+};
+const NUM = ['fog','seedY','root','sprout','crop','farm','ripe','harvest','nodes','link','sim','eco','glow','tractor','drone','truck','day'];
+const sections = $$('[data-key]');
+let KF = [], METRICS = [];
+function flatten(k) { const o = { cx:k.cam[0], cy:k.cam[1], cz:k.cam[2], lx:k.look[0], ly:k.look[1], lz:k.look[2] }; NUM.forEach(n => o[n] = k[n]); return o; }
+function buildKeyframes() {
+  const narrow = innerWidth / innerHeight < 1;
+  let acc = {};
+  KF = sections.map(el => {
+    const key = el.dataset.key;
+    acc = Object.assign({}, acc, KEYS[key]);
+    const k = JSON.parse(JSON.stringify(acc));
+    if (narrow) {
+      if (key === 'simulator') { k.cam = [-40, 26, 84]; k.look = [-40, 1, 38]; }
+      else if (!['seed','soil','grow'].includes(key)) { for (let i = 0; i < 3; i++) k.cam[i] = k.look[i] + (k.cam[i] - k.look[i]) * 1.2; }
+    }
+    return flatten(k);
+  });
+}
+function measure() {
+  const vh = innerHeight;
+  METRICS = sections.map(el => {
+    const top = el.getBoundingClientRect().top + scrollY, h = el.offsetHeight;
+    const s = top - vh * .15, e = Math.max(s, top + h - vh + vh * .15);
+    return { el, top, h, s, e, key: el.dataset.key };
+  });
+}
+buildKeyframes(); measure();
+
+const menuBtn = $('#menuBtn');
+const ICON_MENU = '<path d="M4 7h16M4 12h16M4 17h16"/>', ICON_CLOSE = '<path d="M6 6l12 12M18 6L6 18"/>';
+function setMenu(open) {
+  document.body.classList.toggle('menu-open', open); menuBtn.setAttribute('aria-expanded', open);
+  menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  menuBtn.querySelector('svg').innerHTML = open ? ICON_CLOSE : ICON_MENU;
+}
+menuBtn.addEventListener('click', () => setMenu(!document.body.classList.contains('menu-open')));
+$$('#sheet a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
+const cycleLinks = $$('.track a');
+const CYCLE = ['plan','grow2','monitor','harvest','store','transport','sell','profit','reuse'];
+let currentKey = 'seed';
+function computeTarget(T) {
+  const y = scrollY, vh = innerHeight;
+  let i = 0;
+  for (let k = 0; k < METRICS.length; k++) if (y >= METRICS[k].s) i = k;
+  const a = METRICS[i];
+  let from = KF[i], to = KF[i], t = 0;
+  if (y > a.e && i < METRICS.length - 1) { const b = METRICS[i + 1]; to = KF[i + 1]; t = ease(clamp((y - a.e) / Math.max(1, b.s - a.e), 0, 1)); }
+  for (const k in from) T[k] = mix(from[k], to[k], t);
+  // which section is centred (for UI chrome)
+  const c = y + vh * .5; let key = METRICS[0].key;
+  METRICS.forEach(m => { if (c >= m.top) key = m.key; });
+  if (key !== currentKey) {
+    currentKey = key;
+    const ci = CYCLE.indexOf(key);
+    document.body.classList.toggle('in-cycle', ci >= 0);
+    document.body.classList.toggle('centered', key === 'final');
+    cycleLinks.forEach((l, j) => { l.classList.toggle('on', j === ci); l.classList.toggle('done', ci >= 0 && j < ci); l.setAttribute('aria-current', j === ci ? 'step' : 'false'); });
+  }
+}
+
+/* =====================================================================
+   3. SMOOTH SCROLL + GSAP REVEALS
+   ===================================================================== */
+let lenis = null;
+const hasGSAP = !!(window.gsap && window.ScrollTrigger);
+if (hasGSAP) gsap.registerPlugin(ScrollTrigger);
+if (window.Lenis && !reduce) {
+  try {
+    lenis = new Lenis({ lerp: .085, smoothWheel: true });
+    if (hasGSAP) { lenis.on('scroll', ScrollTrigger.update); gsap.ticker.add(t => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0); }
+    else { const raf = t => { lenis.raf(t); requestAnimationFrame(raf); }; requestAnimationFrame(raf); }
+  } catch (e) { lenis = null; }
+}
+$$('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
+  const target = document.querySelector(a.getAttribute('href'));
+  if (!target) return;
+  e.preventDefault();
+  if (lenis) lenis.scrollTo(target, { duration: 2.2 });
+  else window.scrollTo({ top: target.getBoundingClientRect().top + scrollY, behavior: reduce ? 'auto' : 'smooth' });
+}));
+
+$$('.split').forEach(el => {
+  el.setAttribute('aria-label', el.textContent);
+  el.innerHTML = el.textContent.split(' ').map(w => `<span class="w" aria-hidden="true"><span>${w}</span></span>`).join(' ');
+});
+function heroIntro() {
+  if (!hasGSAP || reduce) return;
+  gsap.from('.hero .w > span', { yPercent: 115, duration: 1.3, ease: 'expo.out', stagger: .06, delay: .15 });
+  gsap.from('.hero .lede, .hero .cue', { opacity: 0, y: 14, duration: 1.2, ease: 'power2.out', delay: .7, stagger: .15 });
+}
+if (hasGSAP && !reduce) {
+  sections.slice(1).forEach(sec => {
+    const words = sec.querySelectorAll('.w > span');
+    const tl = gsap.timeline({ scrollTrigger: { trigger: sec, start: 'top 62%', toggleActions: 'play none none reverse' } });
+    if (words.length) tl.from(words, { yPercent: 115, duration: 1.05, ease: 'expo.out', stagger: .045 });
+    const lede = sec.querySelectorAll('.step, .lede, .broken');
+    if (lede.length) tl.from(lede, { opacity: 0, duration: .9, ease: 'power2.out', stagger: .08 }, '-=.8');
+    const panel = sec.querySelector('.data');
+    if (panel) {
+      tl.from(panel, { opacity: 0, scale: .96, duration: 1, ease: 'expo.out' }, '-=.9');
+      gsap.fromTo(panel, { yPercent: 12 }, { yPercent: -12, ease: 'none', scrollTrigger: { trigger: sec, start: 'top bottom', end: 'bottom top', scrub: true } });
+    }
+  });
+  gsap.from('.whatif span', { yPercent: 40, opacity: 0, rotate: -3, duration: 1.2, ease: 'expo.out', stagger: .12, scrollTrigger: { trigger: '#simulator', start: 'top 60%' } });
+  gsap.from('.brand span', { yPercent: 60, opacity: 0, duration: 1.4, ease: 'expo.out', stagger: .12, scrollTrigger: { trigger: '#final', start: 'top 35%' } });
+  gsap.from('.tagline, .sub, .final .btn, .legend li', { opacity: 0, y: 16, duration: 1, ease: 'power2.out', stagger: .08, scrollTrigger: { trigger: '#final', start: 'top 25%' } });
+  ScrollTrigger.addEventListener('refresh', measure);
+}
+
+function hideLoader() { const l = $('#loader'); l.classList.add('done'); setTimeout(heroIntro, 250); }
+
+/* =====================================================================
+   4. THREE.JS WORLD
+   ===================================================================== */
+const canvas = $('#gl');
+let renderer = null;
+try {
+  if (!window.THREE) throw new Error('three missing');
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, powerPreference: 'high-performance' });
+} catch (e) { renderer = null; }
+if (!renderer) {
+  document.body.classList.add('no-gl');
+  const loop = () => { computeTarget({}); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+  window.addEventListener('resize', measure);
+  setTimeout(hideLoader, 200);
+  return;
+}
+
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, LOW ? 1.6 : 2));
+renderer.setSize(innerWidth, innerHeight, false);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+renderer.shadowMap.enabled = !LOW;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+const FOG = 0x1B2721;
+scene.fog = new THREE.FogExp2(FOG, .1);
+const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, .05, 2600);
+function setFov() { const a = innerWidth / innerHeight; camera.aspect = a; camera.fov = a >= 1 ? 42 : Math.min(74, 42 + (1 - a) * 58); camera.updateProjectionMatrix(); }
+setFov();
+
+const R = rng(7);
+const TAU = Math.PI * 2;
+const C = { sprout:0xA8C97F, wheat:0xE3B45F, rain:0x7DB8C9, clay:0xC9A27E, mist:0xE8ECE2, alarm:0xC07A6A };
+const std = (color, rough = .8, metal = 0, extra = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: rough, metalness: metal }, extra));
+function mesh(geo, mat, x = 0, y = 0, z = 0, parent, shadow = true) {
+  const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z);
+  if (shadow && !LOW) { m.castShadow = true; m.receiveShadow = true; }
+  (parent || scene).add(m); return m;
+}
+function dotTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.35, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c);
+}
+const DOT = dotTexture();
+
+/* ---------- sky + light ---------- */
+const sunDir = new THREE.Vector3(.4, .42, -.82).normalize();
+const sky = new THREE.Mesh(new THREE.SphereGeometry(1000, 48, 24), new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false, fog: false,
+  uniforms: { uDay:{ value:0 }, uTime:{ value:0 }, sunDir:{ value:sunDir } },
+  vertexShader: 'varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }',
+  fragmentShader: `uniform float uDay; uniform float uTime; uniform vec3 sunDir; varying vec3 vW;
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
+      return mix(mix(hash(i), hash(i+vec2(1.,0.)), f.x), mix(hash(i+vec2(0.,1.)), hash(i+vec2(1.,1.)), f.x), f.y); }
+    float fbm(vec2 p){ float v = 0., a = .5; for (int i = 0; i < 5; i++){ v += a*noise(p); p = p*2.03 + 17.1; a *= .5; } return v; }
+    void main(){
+      vec3 d = normalize(vW - cameraPosition); float h = d.y;
+      vec3 top = mix(vec3(.06,.16,.12), vec3(.24,.5,.84), uDay);
+      vec3 mid = mix(vec3(.2,.34,.26), vec3(.72,.84,.88), uDay);
+      vec3 bot = mix(vec3(.12,.2,.14),  vec3(.4,.58,.34), uDay);
+      vec3 c = mix(mid, top, smoothstep(0.0, 0.42, h)); c = mix(bot, c, smoothstep(-0.15, 0.02, h));
+      float s = max(dot(d, sunDir), 0.);
+      vec3 sunC = mix(vec3(.85,.62,.35), vec3(1., .86, .6), uDay);
+      c += sunC * (pow(s, 6.) * .32 + pow(s, 48.) * .6) * mix(.3, 1., uDay);
+      c += sunC * smoothstep(.9993, .9998, s) * 2.6 * uDay;
+      if (h > 0.0) {
+        vec2 uv = d.xz / (h + .12) * .55 + vec2(uTime * .005, uTime * .002);
+        float cl = smoothstep(.5, .82, fbm(uv * .85));
+        float th = fbm(uv * 2.6 + 3.1);
+        vec3 under = mix(vec3(.1,.16,.13), vec3(.72,.76,.8), uDay);
+        vec3 lit = mix(vec3(.3,.34,.3), vec3(1.05,1.02,.96), uDay);
+        vec3 cc = mix(under, lit, clamp(pow(s, 3.) * .9 + th * .45, 0., 1.));
+        float fade = smoothstep(0., .1, h);
+        c = mix(c, cc, cl * fade * .88);
+      }
+      gl_FragColor = vec4(c, 1.);
+    }`
+}));
+sky.renderOrder = -1; scene.add(sky);
+
+const hemi = new THREE.HemisphereLight(0xC6DCE4, 0x4A5A2A, .6); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xFFF1D2, 2.2);
+sun.target.position.set(8, 0, 4);
+sun.position.copy(sunDir).multiplyScalar(160).add(sun.target.position);
+scene.add(sun, sun.target);
+if (!LOW) {
+  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+  const sc = sun.shadow.camera; sc.left = -75; sc.right = 75; sc.top = 75; sc.bottom = -75; sc.near = 20; sc.far = 380;
+  sun.shadow.bias = -.0005; sun.shadow.normalBias = .04;
+}
+const fill = new THREE.DirectionalLight(0x9CC8D6, .35); fill.position.set(-50, 30, 70); scene.add(fill);
+const fogNight = new THREE.Color(0x2A4A36), fogDay = new THREE.Color(0xAFCBBE);
+
+/* ---------- terrain: rolling hills + patchwork fields ---------- */
+function hgt(x, z) {
+  const dx = Math.max(-70 - x, 0, x - 104), dz = Math.max(-42 - z, 0, z - 74);
+  const k = smooth(0, 110, Math.hypot(dx, dz)), r = Math.hypot(x, z);
+  const roll = 7 + 6 * Math.sin(x * .021 + 1.3) * Math.cos(z * .017) + 4 * Math.sin((x - z) * .031) + 1.6 * Math.sin(x * .07 + z * .05);
+  const big = smooth(260, 640, r) * (30 + 18 * Math.sin(x * .008) * Math.cos(z * .01));
+  return k * roll + big;
+}
+function isCore(x, z) { return (x > -48 && x < 40 && z > -38 && z < 54) || (x > 38 && x < 106 && z > -34 && z < 6) || (x > -66 && x < -12 && z > 26 && z < 54); }
+function treeBlocked(x, z) {
+  return (x > -62 && x < 38 && z > -36 && z < 60) || (x > -84 && x < 4 && z > 26 && z < 104) ||
+         (x > 14 && x < 108 && Math.abs(z + 4) < 7) || (x > 58 && x < 102 && z > -34 && z < 6);
+}
+const PATCH_SPAN = 900, PATCH_PX = LOW ? 2048 : (renderer.capabilities.maxTextureSize >= 8192 ? 4096 : 2048);
+const hedges = [];
+function patchworkTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = PATCH_PX; const g = c.getContext('2d');
+  const s = PATCH_PX / PATCH_SPAN, toPx = v => (v + PATCH_SPAN / 2) * s;
+  g.fillStyle = '#4A922A'; g.fillRect(0, 0, PATCH_PX, PATCH_PX);
+  const pal = ['#4E9C2C','#5CAE34','#44902A','#6AB83C','#58A632','#76BE44','#4A9A2A','#3F8826','#9AB24C','#62B03A','#3A8024','#6EB440','#B2B85A','#82A844'];
+  const ang = .32, ca = Math.cos(ang), sa = Math.sin(ang);
+  const W2 = (u, v) => [u * ca - v * sa, u * sa + v * ca];
+  for (let v = -PATCH_SPAN * .78; v < PATCH_SPAN * .78;) {
+    const rowH = 16 + R() * 34;
+    for (let u = -PATCH_SPAN * .78; u < PATCH_SPAN * .78;) {
+      const w = 14 + R() * 46, [wx, wz] = W2(u + w / 2, v + rowH / 2), W = w * s, H = rowH * s;
+      g.save(); g.translate(toPx(wx), toPx(wz)); g.rotate(ang);
+      if (isCore(wx, wz)) { g.fillStyle = '#56A632'; g.fillRect(-W / 2, -H / 2, W, H); for (let y = -H / 2; y < H / 2; y += 3 * s) { g.fillStyle = (Math.round(y / (3 * s)) % 2) ? 'rgba(255,255,200,.05)' : 'rgba(0,30,0,.06)'; g.fillRect(-W / 2, y, W, 3 * s); } g.restore(); u += w; continue; }
+      g.fillStyle = pal[(R() * pal.length) | 0]; g.fillRect(-W / 2, -H / 2, W, H);
+      g.beginPath(); g.rect(-W / 2, -H / 2, W, H); g.clip();
+      const vert = R() > .5, step = (1.4 + R() * 1.9) * s;
+      g.strokeStyle = R() > .45 ? 'rgba(18,36,8,.3)' : 'rgba(250,236,170,.16)'; g.lineWidth = Math.max(1, step * .38);
+      g.beginPath();
+      if (vert) for (let x = -W / 2; x < W / 2; x += step) { g.moveTo(x, -H / 2); g.lineTo(x, H / 2); }
+      else for (let y = -H / 2; y < H / 2; y += step) { g.moveTo(-W / 2, y); g.lineTo(W / 2, y); }
+      g.stroke();
+      const gr = g.createLinearGradient(-W / 2, -H / 2, W / 2, H / 2);
+      gr.addColorStop(0, 'rgba(255,240,180,.1)'); gr.addColorStop(1, 'rgba(0,20,0,.14)'); g.fillStyle = gr; g.fillRect(-W / 2, -H / 2, W, H);
+      g.restore();
+      g.save(); g.translate(toPx(wx), toPx(wz)); g.rotate(ang); g.strokeStyle = 'rgba(70,58,34,.35)'; g.lineWidth = Math.max(1, .5 * s); g.strokeRect(-W / 2, -H / 2, W, H); g.restore();
+      const addHedge = (a, b) => { const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; if (!isCore(m[0], m[1]) && Math.hypot(m[0], m[1]) < 440) hedges.push([a[0], a[1], b[0], b[1]]); };
+      if (R() < .36) addHedge(W2(u, v), W2(u + w, v));
+      if (R() < .24) addHedge(W2(u, v), W2(u, v + rowH));
+      u += w;
+    }
+    v += rowH;
+  }
+  g.lineCap = 'round';
+  hedges.forEach(([x1, z1, x2, z2]) => {
+    g.strokeStyle = 'rgba(10,22,8,.32)'; g.lineWidth = 9 * s; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(toPx(x1) + 3 * s, toPx(z1) + 3 * s); g.lineTo(toPx(x2) + 3 * s, toPx(z2) + 3 * s); g.stroke();
+    g.strokeStyle = 'rgba(24,46,16,.9)'; g.lineWidth = 3.4 * s;
+    g.beginPath(); g.moveTo(toPx(x1), toPx(z1)); g.lineTo(toPx(x2), toPx(z2)); g.stroke();
+    g.strokeStyle = 'rgba(90,120,55,.5)'; g.lineWidth = 1.1 * s;
+    g.beginPath(); g.moveTo(toPx(x1) - 1 * s, toPx(z1) - 1 * s); g.lineTo(toPx(x2) - 1 * s, toPx(z2) - 1 * s); g.stroke();
+  });
+  for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${R() > .5 ? '230,220,150' : '10,30,5'},${R() * .12})`; g.fillRect(R() * PATCH_PX, R() * PATCH_PX, 1.5, 1.5); }
+  const t = new THREE.CanvasTexture(c); t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t;
+}
+{
+  const S = 1600, seg = LOW ? 130 : 230;
+  const g = new THREE.PlaneGeometry(S, S, seg, seg); g.rotateX(-Math.PI / 2);
+  const p = g.attributes.position, col = new Float32Array(p.count * 3);
+  const a = new THREE.Color(0x4A962A), b = new THREE.Color(0x5AAA34), hill = new THREE.Color(0x3E8226), c = new THREE.Color();
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), z = p.getZ(i), y = hgt(x, z); p.setY(i, y);
+    const n = .5 + .5 * Math.sin(x * .09 + Math.cos(z * .07) * 2) * Math.cos(z * .08 + x * .01);
+    c.copy(a).lerp(b, n).lerp(hill, smooth(20, 60, y) * .6);
+    col.set([c.r, c.g, c.b], i * 3);
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.computeVertexNormals();
+  const patchTex = patchworkTexture(), half = (PATCH_SPAN / 2).toFixed(1), span = PATCH_SPAN.toFixed(1);
+  const mat = std(0xffffff, .95, 0, { vertexColors: true });
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uPatch = { value: patchTex };
+    sh.vertexShader = 'varying vec3 vWP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = 'uniform sampler2D uPatch; varying vec3 vWP;\n' + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+      vec2 puv = vec2((vWP.x + ${half}) / ${span}, 1.0 - (vWP.z + ${half}) / ${span});
+      float edge = smoothstep(0.0, 0.06, min(min(puv.x, 1.0 - puv.x), min(puv.y, 1.0 - puv.y)));
+      if (edge > 0.0) diffuseColor.rgb = mix(diffuseColor.rgb, texture2D(uPatch, puv).rgb, edge);
+      float nz = fract(sin(dot(floor(vWP.xz * 1.7), vec2(12.9898, 78.233))) * 43758.5453);
+      float nf = fract(sin(dot(floor(vWP.xz * 9.0), vec2(39.34, 11.13))) * 24634.63);
+      float nb = fract(sin(dot(floor(vWP.xz * 25.0), vec2(71.14, 4.61))) * 9021.7);
+      float near = 1.0 - smoothstep(15.0, 70.0, length(vWP - cameraPosition));
+      diffuseColor.rgb *= 0.94 + 0.12 * nz + (nf - 0.5) * 0.14 * near + (nb - 0.5) * 0.06 * near;`);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+      roughnessFactor = clamp(roughnessFactor + (nf - 0.5) * 0.3 * near, 0.35, 1.0);`);
+  };
+  const t = new THREE.Mesh(g, mat);
+  t.receiveShadow = !LOW; scene.add(t);
+}
+
+/* ---------- soil texture for plots ---------- */
+function weatherTexture(hex, opts) {
+  opts = opts || {}; const c = document.createElement('canvas'); c.width = 256; c.height = opts.tall ? 512 : 256; const g = c.getContext('2d');
+  g.fillStyle = hex; g.fillRect(0, 0, c.width, c.height);
+  const rustN = opts.rust !== undefined ? opts.rust : 10;
+  for (let i = 0; i < rustN; i++) {
+    const x = R() * c.width, y0 = R() * c.height * .5, len = c.height * (.3 + R() * .6), w = 2 + R() * 5;
+    const gr = g.createLinearGradient(x, y0, x, y0 + len);
+    gr.addColorStop(0, 'rgba(120,70,35,.38)'); gr.addColorStop(.5, 'rgba(90,55,30,.22)'); gr.addColorStop(1, 'rgba(90,55,30,0)');
+    g.fillStyle = gr; g.fillRect(x - w / 2, y0, w, len);
+  }
+  if (opts.panels) { g.strokeStyle = 'rgba(0,0,0,.22)'; g.lineWidth = 2; for (let y = opts.panels; y < c.height; y += opts.panels) { g.beginPath(); g.moveTo(0, y); g.lineTo(c.width, y); g.stroke(); } }
+  for (let i = 0; i < 2600; i++) { const v = R() > .5 ? 255 : 0; g.fillStyle = `rgba(${v},${v},${v},${R() * .05})`; g.fillRect(R() * c.width, R() * c.height, 1.4, 1.4); }
+  if (opts.grime) { const gr2 = g.createLinearGradient(0, c.height * .7, 0, c.height); gr2.addColorStop(0, 'rgba(20,15,10,0)'); gr2.addColorStop(1, `rgba(20,15,10,${opts.grime})`); g.fillStyle = gr2; g.fillRect(0, c.height * .7, c.width, c.height * .3); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
+}
+function soilTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = '#5A4128'; g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 16; i++) { g.fillStyle = 'rgba(34,24,14,.7)'; g.fillRect(0, i * 16 + 10, 256, 5); g.fillStyle = 'rgba(110,80,52,.25)'; g.fillRect(0, i * 16 + 3, 256, 3); }
+  for (let i = 0; i < 1400; i++) { g.fillStyle = `rgba(${R() > .5 ? '120,90,60' : '20,14,9'},${R() * .35})`; g.fillRect(R() * 256, R() * 256, 1.5, 1.5); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t;
+}
+const SOIL = soilTexture();
+function plotGround(x0, z0, x1, z1, parent) {
+  const w = x1 - x0, d = z1 - z0, tex = SOIL.clone(); tex.needsUpdate = true;
+  tex.repeat.set(w / 10, d / (.7 * 16));
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), std(0xffffff, 1, 0, { map: tex }));
+  m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, .025, (z0 + z1) / 2); m.receiveShadow = !LOW;
+  (parent || scene).add(m); return m;
+}
+
+/* ---------- crop plant geometry (leafy, row-crop) + animated material ---------- */
+function plantGeo() {
+  const pos = [], col = [];
+  const push = (p, sh) => { pos.push(p[0], p[1], p[2]); col.push(sh * .92, sh, sh * .82); };
+  const N = 7, SEG = 5;
+  for (let i = 0; i < N; i++) {
+    const t = i / (N - 1), y0 = .14 + t * .6, yaw = i * 2.4, len = .36 - t * .13, wid = len * .3, el = .95 - t * .55;
+    const ce = Math.cos(el), se = Math.sin(el), cy = Math.cos(yaw), sy = Math.sin(yaw);
+    const tf = (px, py, pz) => { const x1 = px * ce - py * se, y1 = px * se + py * ce; return [x1 * cy + pz * sy, y1 + y0, -x1 * sy + pz * cy]; };
+    const U = [], L = [];
+    for (let j = 0; j <= SEG; j++) {
+      const s = j / SEG, px = len * s, py = -len * .5 * s * s, hw = wid * Math.sin(Math.PI * Math.pow(s, .8));
+      U.push(tf(px, py + hw * .25, hw)); L.push(tf(px, py + hw * .25, -hw));
+    }
+    const sh = .72 + t * .38;
+    for (let j = 0; j < SEG; j++) { push(U[j], sh); push(L[j], sh * .94); push(U[j + 1], sh); push(L[j], sh * .94); push(L[j + 1], sh * .94); push(U[j + 1], sh); }
+  }
+  [[.03, 0], [0, .03]].forEach(([dx, dz]) => { const a = [-dx, 0, -dz], b = [dx, 0, dz], c = [dx, .8, dz], d = [-dx, .8, -dz]; [a, b, c, a, c, d].forEach(p => push(p, .55)); });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.computeVertexNormals(); return g;
+}
+const TUFT = plantGeo();
+const uTime = { value: 0 };
+function cropUniforms() { return { uTime, uGrow:{ value:0 }, uCut:{ value:-1e4 }, uPlantMax:{ value:1e4 }, uRipe:{ value:0 }, uDry:{ value:0 } }; }
+function cropMaterial(u) {
+  const m = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: .55, metalness: 0, side: THREE.DoubleSide, emissive: 0x13220A });
+  m.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, u);
+    sh.vertexShader = 'uniform float uTime; uniform float uGrow; uniform float uCut; uniform float uPlantMax;\n' + sh.vertexShader.replace('#include <begin_vertex>', `
+      vec3 transformed = vec3(position);
+      vec4 ip = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+      float g = uGrow;
+      if (ip.x < uCut) g = min(g, 0.1);
+      if (ip.x > uPlantMax) g = 0.0;
+      transformed.y *= g;
+      transformed.xz *= mix(0.35, 1.0, clamp(g, 0.0, 1.0));
+      float hh = position.y;
+      transformed.x += sin(uTime * 1.7 + ip.x * 0.37 + ip.z * 0.23) * 0.09 * hh * hh * g;
+      transformed.z += cos(uTime * 1.3 + ip.x * 0.21 + ip.z * 0.11) * 0.05 * hh * hh * g;
+    `);
+    sh.fragmentShader = 'uniform float uRipe; uniform float uDry;\n' + sh.fragmentShader.replace('#include <color_fragment>', `
+      #include <color_fragment>
+      diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.66, 0.30), uRipe * 0.85);
+      diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.52, 0.40, 0.25), uDry * 0.8);
+    `);
+  };
+  return m;
+}
+const GREENS = [0x4E9E2A, 0x5AAE32, 0x469226, 0x66B83C, 0x52A42E].map(h => new THREE.Color(h));
+function cropField(plots, spacing, rowGap, scale, u, skip) {
+  const pts = [];
+  plots.forEach(([x0, z0, x1, z1]) => {
+    for (let z = z0 + rowGap / 2; z < z1; z += rowGap)
+      for (let x = x0 + spacing / 2; x < x1; x += spacing) {
+        const px = x + (R() - .5) * .12, pz = z + (R() - .5) * .1;
+        if (skip && skip(px, pz)) continue;
+        pts.push([px, pz]);
+      }
+  });
+  const im = new THREE.InstancedMesh(TUFT, cropMaterial(u), pts.length);
+  const o = new THREE.Object3D();
+  pts.forEach(([x, z], i) => {
+    o.position.set(x, .02, z); o.rotation.set(0, R() * TAU, 0);
+    const s = scale * (.8 + R() * .45); o.scale.set(s, s * (.9 + R() * .3), s); o.updateMatrix();
+    im.setMatrixAt(i, o.matrix); im.setColorAt(i, GREENS[(R() * GREENS.length) | 0]);
+  });
+  im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true;
+  im.frustumCulled = false; im.receiveShadow = !LOW;
+  scene.add(im); return im;
+}
+
+/* ---------- farm: plots + crops ---------- */
+const PLOTS = [[-16, -2, -2, 11], [0, -2, 14, 11], [-16, 13, -2, 24], [0, 13, 14, 24], [-16, 26, -2, 33], [0, 26, 14, 33], [16, 1, 30, 11], [16, 13, 30, 24]];
+PLOTS.forEach(p => plotGround(...p));
+/* grass: thin, tapered blades that fill the yard around the fields and sway with the crops */
+function grassGeo() {
+  const pos = [], col = [], BL = 3, SEG = 3;
+  for (let b = 0; b < BL; b++) {
+    const a = b / BL * Math.PI * 2 + b * 1.3, lean = .12 + b * .06, ca = Math.cos(a), sa = Math.sin(a), h = .75 + b * .12, ox = (b - 1) * .05;
+    const ring = [];
+    for (let k = 0; k <= SEG; k++) {
+      const t = k / SEG, y = t * h, out = lean * t * t, w = .028 * (1 - t * .95);
+      ring.push([[ox + ca * out - sa * w, y, ca * w + sa * out], [ox + ca * out + sa * w, y, -ca * w + sa * out], .55 + t * .6]);
+    }
+    for (let k = 0; k < SEG; k++) {
+      const [a0, b0, s0] = ring[k], [a1, b1, s1] = ring[k + 1];
+      [[a0, s0], [b0, s0], [a1, s1], [b0, s0], [b1, s1], [a1, s1]].forEach(([v, sh]) => { pos.push(...v); col.push(sh * .9, sh, sh * .7); });
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.computeVertexNormals(); return g;
+}
+function grassBlocked(x, z) {
+  if (Math.hypot(x, z) < 6) return true;                                   // keep the seed close-ups clean
+  for (const [x0, z0, x1, z1] of PLOTS) if (x > x0 - .6 && x < x1 + .6 && z > z0 - .6 && z < z1 + .6) return true;
+  if (Math.hypot(x + 28, z - 7) < 8.6) return true;                        // pond
+  if (x > 15 && Math.abs(z + 4) < 3.3) return true;                        // road
+  if (x > 17 && x < 23 && z > -15 && z < -3.5) return true;                // lane to barn
+  if (x > 19 && x < 29 && z > -22 && z < -10) return true;                 // barn
+  if (Math.hypot(x - 32, z + 12) < 2.6 || Math.hypot(x - 32, z + 19) < 2.6) return true; // silos
+  if (x > 5 && x < 17 && z > -28 && z < -19) return true;                  // compost + biogas
+  if (x > -34 && x < -20 && z > -22 && z < -11) return true;               // solar
+  if (x > -24 && x < -18 && z > 1 && z < 6) return true;                   // pump house
+  if (x > -23.5 && x < -15.5 && Math.abs(z - 12) < 1.2) return true;       // canal
+  if (x > -54 && x < -26 && z > 30 && z < 43) return true;                 // simulator plots + tanks
+  if (x > 66 && x < 90 && z > -28 && z < -8) return true;                  // market
+  return false;
+}
+{
+  const grassU = cropUniforms(); grassU.uGrow.value = 1;
+  const N = LOW ? 7000 : 20000, pts = [];
+  let guard = 0;
+  while (pts.length < N && guard++ < N * 4) {
+    const x = -46 + R() * 84, z = -36 + R() * 88;
+    if (!grassBlocked(x, z)) pts.push([x, z]);
+  }
+  const im = new THREE.InstancedMesh(grassGeo(), cropMaterial(grassU), pts.length);
+  const o = new THREE.Object3D(), GC = [0x4F9E2C, 0x5CAC34, 0x69B63E, 0x47922A, 0x74BC44, 0x57A232].map(h => new THREE.Color(h));
+  pts.forEach(([x, z], i) => {
+    o.position.set(x, 0, z); o.rotation.set(0, R() * TAU, 0);
+    const sc = .9 + R() * .9; o.scale.set(sc, sc * (.7 + R() * .6), sc); o.updateMatrix();
+    im.setMatrixAt(i, o.matrix); im.setColorAt(i, GC[(R() * GC.length) | 0]);
+  });
+  im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true;
+  im.frustumCulled = false; im.receiveShadow = !LOW; scene.add(im);
+}
+const farmU = cropUniforms();
+cropField(PLOTS, LOW ? .56 : .34, LOW ? .95 : .75, 1.1, farmU, (x, z) => Math.hypot(x, z - .8) < .9);
+
+/* ---------- seed, soil cut-away, roots, sprout ---------- */
+const soilCore = new THREE.Group(); scene.add(soilCore);
+[[.26, 0x3B2A1C], [.6, 0x4D3624], [.8, 0x654630], [1.4, 0x76573A]].reduce((y, [h, c]) => {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(3.4, h, 1.6), std(c, .95)); m.position.set(0, y - h / 2, 0); soilCore.add(m); return y - h;
+}, -.012);
+for (let i = 0; i < 26; i++) {
+  const s = new THREE.Mesh(new THREE.DodecahedronGeometry(.03 + R() * .06, 0), std(R() > .5 ? 0x8C7A62 : 0x5A4A3A, .9));
+  s.position.set((R() - .5) * 3.2, -.1 - R() * 2.8, .78 + R() * .04); soilCore.add(s);
+}
+const seedPos = new THREE.Vector3(0, 1.05, .84);
+const seed = new THREE.Mesh(new THREE.SphereGeometry(.16, 32, 16), std(0xB98A5E, .42, 0, { emissive: 0x4A2E12, emissiveIntensity: .5 }));
+seed.scale.set(.74, 1, .74); seed.position.copy(seedPos); scene.add(seed);
+const seedGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: DOT, color: C.wheat, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+seedGlow.scale.set(1.3, 1.3, 1); scene.add(seedGlow);
+const seedLight = new THREE.PointLight(C.wheat, 2, 6); scene.add(seedLight);
+const ROOT_BASE = new THREE.Vector3(0, -.4, .84);
+const rootMat = std(0xDCCBA4, .7, 0, { emissive: 0x3A2E1A, emissiveIntensity: .6 });
+const roots = [];
+for (let i = 0; i < 8; i++) {
+  const pts = [ROOT_BASE.clone()]; let p = ROOT_BASE.clone(); const dir = (i / 7 - .5) * 1.6;
+  for (let k = 1; k <= 6; k++) { p = p.clone().add(new THREE.Vector3(dir * .12 * (1 + R() * .6) + (R() - .5) * .12, -.26 - R() * .12, (R() - .5) * .02)); p.z = .85 + R() * .02; pts.push(p); }
+  const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, .011 + (i % 3 === 0 ? .006 : 0), 5, false);
+  const m = new THREE.Mesh(g, rootMat); scene.add(m); roots.push(m);
+}
+const sproutMat = std(0x8DB35A, .6, 0, { side: THREE.DoubleSide, emissive: 0x1C2A10, emissiveIntensity: .4 });
+const stem = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([ROOT_BASE.clone(), new THREE.Vector3(.02, 0, .84), new THREE.Vector3(-.03, .45, .86), new THREE.Vector3(0, .88, .84)]), 48, .024, 6, false), sproutMat);
+scene.add(stem);
+const leafShape = new THREE.Shape(); leafShape.moveTo(0, 0); leafShape.quadraticCurveTo(.13, .09, .3, 0); leafShape.quadraticCurveTo(.13, -.07, 0, 0);
+const leafGeo = new THREE.ShapeGeometry(leafShape, 10);
+const leaves = [0, 1, 2].map(i => { const l = new THREE.Mesh(leafGeo, sproutMat); l.position.set(0, .88 - i * .22, .84); l.rotation.set(-.3, i * 2.2, .5); scene.add(l); return l; });
+const SPORES = LOW ? 80 : 180;
+const sporeGeo = new THREE.BufferGeometry(), sporePos = new Float32Array(SPORES * 3), sporeSeed = [];
+for (let i = 0; i < SPORES; i++) { const r = .5 + R() * 2.8, a = R() * TAU, b = (R() - .5) * 2; sporeSeed.push([r, a, b, .2 + R() * .6]); }
+sporeGeo.setAttribute('position', new THREE.BufferAttribute(sporePos, 3));
+const spores = new THREE.Points(sporeGeo, new THREE.PointsMaterial({ size: .045, map: DOT, color: C.wheat, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+scene.add(spores);
+
+/* ---------- farm structures ---------- */
+const farm = new THREE.Group(); scene.add(farm);
+// pond + canal + pump house
+const pond = new THREE.Mesh(new THREE.CircleGeometry(7, 48), std(0x3C7F94, .05, .25, { emissive: 0x0D2A33, emissiveIntensity: .35 }));
+pond.rotation.x = -Math.PI / 2; pond.position.set(-28, .04, 7); farm.add(pond);
+const rim = new THREE.Mesh(new THREE.RingGeometry(7, 7.8, 48), std(0x4A3A2A, 1)); rim.rotation.x = -Math.PI / 2; rim.position.set(-28, .03, 7); farm.add(rim);
+mesh(new THREE.BoxGeometry(6.5, .06, 1), std(0x3C7F94, .15, .2, { emissive: 0x0D2A33 }), -19.5, .05, 12, farm, false);
+mesh(new THREE.BoxGeometry(2.2, 2, 2.2), std(0xB8B3A3, .8), -21, 1, 3.5, farm);
+// barn
+mesh(new THREE.BoxGeometry(8, 5, 10), std(0xffffff, .88, 0, { map: weatherTexture('#6E3B2B', { rust: 14, grime: .3 }) }), 24, 2.5, -16, farm);
+{ const rg = new THREE.CylinderGeometry(4.97, 4.97, 10.6, 3, 1); rg.rotateX(Math.PI / 2); rg.rotateZ(Math.PI); rg.scale(1, .55, 1);
+  mesh(rg, std(0xffffff, .55, .35, { map: weatherTexture('#3A3230', { rust: 8, panels: 22 }) }), 24, 5 + 1.37, -16, farm); }
+mesh(new THREE.BoxGeometry(3, 3.2, .1), std(0x2A1C15, .9), 24, 1.6, -10.95, farm, false);
+// silos
+[[32, -12], [32, -19]].forEach(([x, z]) => {
+  mesh(new THREE.CylinderGeometry(2, 2, 9, 32), std(0xffffff, .3, .8, { map: weatherTexture('#B9BDB6', { rust: 6, panels: 46, tall: true }) }), x, 4.5, z, farm);
+  mesh(new THREE.ConeGeometry(2.2, 1.7, 24), std(0x7C827B, .32, .75), x, 9.85, z, farm);
+  for (let k = 1; k < 5; k++) mesh(new THREE.TorusGeometry(2.02, .04, 6, 32), std(0x6E736C, .5, .6), x, k * 1.8, z, farm, false).rotation.x = Math.PI / 2;
+});
+// compost + biogas
+{ const dome = mesh(new THREE.SphereGeometry(2.6, 28, 12, 0, TAU, 0, Math.PI / 2), std(0x5B6B4B, .7, .1), 13, 0, -24, farm);
+  mesh(new THREE.CylinderGeometry(.15, .15, 3), std(0x9AA098, .4, .6), 15.2, 1.5, -24, farm);
+  [[8, -21], [9.5, -25], [7, -26]].forEach(([x, z]) => { const m = mesh(new THREE.SphereGeometry(1.5, 16, 10), std(0x4A3524, 1), x, 0, z, farm); m.scale.set(1.3, .5, 1); }); }
+// solar array
+for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) {
+  const p = mesh(new THREE.BoxGeometry(3, .1, 1.8), std(0x16283A, .12, .82, { emissive: 0x0A1A28 }), -32 + j * 3.4, 1.3, -14 - i * 3, farm);
+  p.rotation.x = -.5; mesh(new THREE.BoxGeometry(.1, 1.3, .1), std(0x777777, .6, .5), -32 + j * 3.4, .65, -14 - i * 3, farm, false);
+}
+// road + market
+mesh(new THREE.PlaneGeometry(84, 5), std(0x5A5046, .95), 59, .03, -4, farm, false).rotation.x = -Math.PI / 2;
+mesh(new THREE.PlaneGeometry(5, 10), std(0x48413A, .95), 20, .03, -9, farm, false).rotation.x = -Math.PI / 2;
+for (let i = 0; i < 12; i++) mesh(new THREE.PlaneGeometry(2.2, .18), std(0xD9D0B8, .8), 22 + i * 7, .045, -4, farm, false).rotation.x = -Math.PI / 2;
+{ const shed = new THREE.Group(); shed.position.set(82, 0, -22); farm.add(shed);
+  mesh(new THREE.BoxGeometry(16, .35, 9), std(0x6A6F66, .5, .5), 0, 5, 0, shed);
+  [[-7.5, -4], [7.5, -4], [-7.5, 4], [7.5, 4], [0, -4], [0, 4]].forEach(([x, z]) => mesh(new THREE.BoxGeometry(.3, 5, .3), std(0x555a53, .6, .5), x, 2.5, z, shed));
+  const aw = [C.wheat, C.sprout, C.rain, C.clay];
+  for (let i = 0; i < 8; i++) {
+    const x = 70 + (i % 4) * 4.2, z = i < 4 ? -11 : -15.5;
+    mesh(new THREE.BoxGeometry(3.2, .12, 2.4), std(aw[i % 4], .8), x, 2.4, z, farm).rotation.x = .18;
+    [[-1.5, -1.1], [1.5, -1.1], [-1.5, 1.1], [1.5, 1.1]].forEach(([a, b]) => mesh(new THREE.BoxGeometry(.08, 2.3, .08), std(0x4A3A2A, .8), x + a, 1.15, z + b, farm, false));
+    mesh(new THREE.BoxGeometry(2.6, .8, 1.2), std(0x8A6A48, .9), x, .4, z + .3, farm);
+    mesh(new THREE.BoxGeometry(2.4, .12, 1), std(aw[(i + 1) % 4], .9), x, .86, z + .3, farm, false);
+  }
+}
+// trees: hedgerows along field edges + clumps, soft blob crowns
+{
+  function crownGeo() {
+    const blobs = [[0, 3.5, 0, 1.75], [.95, 3.05, .4, 1.25], [-.85, 3.15, -.3, 1.3], [.2, 4.35, -.2, 1.2], [-.3, 2.85, .85, 1.15], [.4, 3.2, -.9, 1.1]];
+    const P = [], Nn = [];
+    blobs.forEach(([bx, by, bz, r]) => {
+      const a = new THREE.IcosahedronGeometry(1, 1).attributes.position.array;
+      for (let i = 0; i < a.length; i += 3) {
+        const x = a[i], y = a[i + 1], z = a[i + 2], d = 1 + .13 * Math.sin(x * 5.1 + y * 3.3) * Math.cos(z * 4.7 + x * 1.3);
+        P.push(bx + x * r * d, by + y * r * d * .92, bz + z * r * d); Nn.push(x, y * .8 + .2, z);
+      }
+    });
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); g.normalizeNormals(); return g;
+  }
+  const MAX = LOW ? 260 : 820, trunkG = new THREE.CylinderGeometry(.2, .34, 2.6, 7); trunkG.translate(0, 1.3, 0);
+  const trunks = new THREE.InstancedMesh(trunkG, std(0x4A3526, 1), MAX), crowns = new THREE.InstancedMesh(crownGeo(), std(0xffffff, .82), MAX);
+  const o = new THREE.Object3D(), tc = [0x2F6E24, 0x3A7E2C, 0x2A6420, 0x468C32, 0x3F842E, 0x347428].map(h => new THREE.Color(h));
+  let n = 0;
+  const place = (x, z, s) => {
+    if (n >= MAX || treeBlocked(x, z)) return;
+    o.position.set(x, hgt(x, z) - .15, z); o.rotation.set(0, R() * TAU, 0); o.scale.set(s, s * (.85 + R() * .35), s); o.updateMatrix();
+    trunks.setMatrixAt(n, o.matrix); crowns.setMatrixAt(n, o.matrix); crowns.setColorAt(n, tc[(R() * tc.length) | 0]); n++;
+  };
+  const hs = hedges.slice().sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1]));
+  for (const [x1, z1, x2, z2] of hs) {
+    const L = Math.hypot(x2 - x1, z2 - z1), step = LOW ? 7 : 4.2;
+    for (let d = 0; d < L; d += step * (.7 + R() * .6)) { if (R() < .25) continue; const t = d / L; place(mix(x1, x2, t) + (R() - .5) * 1.2, mix(z1, z2, t) + (R() - .5) * 1.2, .7 + R() * .7); }
+    if (n >= MAX * .75) break;
+  }
+  for (let k = 0; k < 40 && n < MAX; k++) {
+    const r = 45 + R() * 260, a = R() * TAU, cx = Math.cos(a) * r, cz = Math.sin(a) * r, cnt = 5 + (R() * 10 | 0);
+    for (let j = 0; j < cnt; j++) place(cx + (R() - .5) * 14, cz + (R() - .5) * 14, .8 + R() * .9);
+  }
+  trunks.count = crowns.count = n;
+  [trunks, crowns].forEach(m => { m.frustumCulled = false; m.castShadow = !LOW; m.receiveShadow = !LOW; farm.add(m); });
+  if (crowns.instanceColor) crowns.instanceColor.needsUpdate = true;
+}
+// soft ground mist
+function hazeTexture() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d');
+  for (let i = 0; i < 26; i++) {
+    const x = 40 + R() * 176, y = 40 + R() * 48, r = 18 + R() * 34, gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, 'rgba(255,255,255,.22)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 256, 128);
+  }
+  return new THREE.CanvasTexture(c);
+}
+const HAZE = hazeTexture(), mists = [];
+for (let i = 0; i < (LOW ? 14 : 34); i++) {
+  const r = 120 + R() * 220, a = R() * TAU, x = Math.cos(a) * r, z = Math.sin(a) * r;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: HAZE, color: 0xFFF1D6, transparent: true, opacity: 0, depthWrite: false }));
+  sp.position.set(x, hgt(x, z) + 2.5 + R() * 5, z); sp.scale.set(80 + R() * 90, 20 + R() * 16, 1);
+  scene.add(sp); mists.push({ sp, base: .12 + R() * .14 });
+}
+// machinery helpers
+function wheel(r, w, parent, x, y, z) { const g = new THREE.CylinderGeometry(r, r, w, 20); g.rotateX(Math.PI / 2); const m = mesh(g, std(0x1E1E1C, .9), x, y, z, parent); return m; }
+const glassMat = std(0x9CC3C9, .05, .1, { transparent: true, opacity: .35 });
+const tyreMat = std(0x161616, .95), rimMat = std(0xE8C21E, .38, .35), lugGeo = new THREE.BoxGeometry(.14, .12, 1);
+function tyre(r, w, parent, x, y, z, rimR, lugs) {
+  const grp = new THREE.Group(); grp.position.set(x, y, z); parent.add(grp);
+  const tg = new THREE.CylinderGeometry(r, r, w, 30); tg.rotateX(Math.PI / 2); mesh(tg, tyreMat, 0, 0, 0, grp);
+  const rg = new THREE.CylinderGeometry(rimR, rimR, w + .03, 22); rg.rotateX(Math.PI / 2); mesh(rg, rimMat, 0, 0, 0, grp, false);
+  const hg = new THREE.CylinderGeometry(rimR * .32, rimR * .32, w + .09, 12); hg.rotateX(Math.PI / 2); mesh(hg, std(0x9C8A2A, .5, .5), 0, 0, 0, grp, false);
+  for (let i = 0; i < lugs; i++) { const a = i / lugs * TAU, l = new THREE.Mesh(lugGeo, tyreMat); l.scale.z = w * .96; l.position.set(Math.cos(a) * r, Math.sin(a) * r, 0); l.rotation.z = a + .5; grp.add(l); }
+  grp.userData.r = r; return grp;
+}
+function makeTractor() {
+  const t = new THREE.Group(), body = new THREE.Group(); t.add(body);
+  const green = std(0x2F7D2B, .3, .35), dark = std(0x1C1E1C, .5, .5), glassT = std(0x9CC3C9, .04, .1, { transparent: true, opacity: .3 });
+  mesh(new THREE.BoxGeometry(3.1, .38, .8), dark, .35, .78, 0, body);
+  mesh(new THREE.BoxGeometry(1.95, 1, 1.02), green, 1, 1.38, 0, body);
+  mesh(new THREE.BoxGeometry(1.95, .09, 1.05), rimMat, 1, 1.64, 0, body, false);
+  mesh(new THREE.BoxGeometry(.1, .78, .88), dark, 2, 1.32, 0, body, false);
+  [.3, -.3].forEach(z => mesh(new THREE.BoxGeometry(.06, .12, .2), std(0xFFF2C8, .3, 0, { emissive: 0xFFE9B0, emissiveIntensity: 1.2 }), 2.06, 1.62, z, body, false));
+  [.82, -.82].forEach(z => mesh(new THREE.BoxGeometry(1.4, .1, .56), green, -.55, 2.02, z, body));
+  [[-1.02, .62], [-1.02, -.62], [.14, .62], [.14, -.62]].forEach(([x, z]) => mesh(new THREE.BoxGeometry(.08, 1.4, .08), dark, x, 2.45, z, body));
+  mesh(new THREE.BoxGeometry(1.1, 1.32, 1.2), glassT, -.44, 2.42, 0, body, false);
+  mesh(new THREE.BoxGeometry(1.45, .14, 1.46), green, -.44, 3.18, 0, body);
+  mesh(new THREE.CylinderGeometry(.07, .07, .16, 10), std(0xF0A020, .3, 0, { emissive: 0xF09010, emissiveIntensity: 1.5 }), -.44, 3.33, .5, body, false);
+  mesh(new THREE.CylinderGeometry(.055, .055, 1.15, 10), dark, 1.5, 2.2, .34, body);
+  const w = [tyre(1, .58, t, -.58, 1, .98, .6, 20), tyre(1, .58, t, -.58, 1, -.98, .6, 20), tyre(.56, .36, t, 1.5, .56, .74, .34, 12), tyre(.56, .36, t, 1.5, .56, -.74, .34, 12)];
+  // trailed sprayer with boom
+  const spr = new THREE.Group(); spr.position.set(-2.3, 0, 0); t.add(spr);
+  const tg = new THREE.CylinderGeometry(.58, .58, 1.4, 20); tg.rotateZ(Math.PI / 2); mesh(tg, std(0xE9E6DC, .45, .1), -.7, 1.4, 0, spr);
+  mesh(new THREE.BoxGeometry(2, .12, .95), dark, -.6, .82, 0, spr);
+  mesh(new THREE.BoxGeometry(1.3, .08, .08), dark, .6, .72, 0, spr, false);
+  tyre(.42, .26, spr, -.7, .42, .62, .24, 0); tyre(.42, .26, spr, -.7, .42, -.62, .24, 0);
+  mesh(new THREE.BoxGeometry(.1, .1, 9.6), rimMat, -1.75, 1.15, 0, spr);
+  mesh(new THREE.BoxGeometry(.06, .06, 9.6), dark, -1.75, .95, 0, spr, false);
+  const SP = LOW ? 140 : 320, spGeo = new THREE.BufferGeometry(), spSeed = [];
+  for (let i = 0; i < SP; i++) spSeed.push([(R() - .5) * 9.4, R(), R()]);
+  spGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SP * 3), 3));
+  const spray = new THREE.Points(spGeo, new THREE.PointsMaterial({ size: .22, map: DOT, color: 0xF8EACB, transparent: true, opacity: .45, depthWrite: false, blending: THREE.AdditiveBlending }));
+  spray.frustumCulled = false; spr.add(spray);
+  t.userData = { w, spray, spGeo, spSeed, yaw: 0, spin: 0, lastX: 0 };
+  farm.add(t); return t;
+}
+function makeCombine() {
+  const t = new THREE.Group();
+  mesh(new THREE.BoxGeometry(3.4, 2, 2.3), std(0xD6A445, .35, .3), 0, 1.7, 0, t);
+  mesh(new THREE.BoxGeometry(1.2, 1.1, 1.3), glassMat, .9, 3.2, 0, t, false);
+  mesh(new THREE.BoxGeometry(1.3, .12, 1.4), std(0xD6A445, .5), .9, 3.8, 0, t);
+  mesh(new THREE.BoxGeometry(.9, .55, 5.4), std(0x8E6A28, .6, .2), 2.3, .55, 0, t);
+  mesh(new THREE.CylinderGeometry(.14, .14, 2.6), std(0xD6A445, .5), -1.2, 3, .9, t).rotation.z = .9;
+  t.userData.w = [wheel(.8, .5, t, .8, .8, 1.2), wheel(.8, .5, t, .8, .8, -1.2), wheel(.55, .4, t, -1.2, .55, 1.1), wheel(.55, .4, t, -1.2, .55, -1.1)];
+  farm.add(t); return t;
+}
+function makeTruck() {
+  const t = new THREE.Group();
+  mesh(new THREE.BoxGeometry(1.8, 1.8, 2.1), std(0xD9D3C3, .35, .25), 2.4, 1.45, 0, t);
+  mesh(new THREE.BoxGeometry(.05, .8, 1.8), glassMat, 3.32, 1.75, 0, t, false);
+  mesh(new THREE.BoxGeometry(4.2, 2.3, 2.3), std(0x3F6B4A, .42, .25), -.7, 1.7, 0, t);
+  mesh(new THREE.BoxGeometry(4.3, .1, 2.35), std(C.wheat, .5), -.7, 2.9, 0, t, false);
+  t.userData.w = [2.4, -.2, -1.8].flatMap(x => [wheel(.48, .35, t, x, .48, 1), wheel(.48, .35, t, x, .48, -1)]);
+  farm.add(t); return t;
+}
+const tractor = makeTractor();
+const combines = [makeCombine(), makeCombine()];
+const truck = makeTruck();
+// drone
+const drone = new THREE.Group(); farm.add(drone);
+mesh(new THREE.BoxGeometry(.7, .18, .7), std(0xE8ECE2, .4, .3), 0, 0, 0, drone);
+const rotors = [[.55, .55], [-.55, .55], [.55, -.55], [-.55, -.55]].map(([x, z]) => {
+  mesh(new THREE.BoxGeometry(.08, .06, .08), std(0x333333), x * .7, 0, z * .7, drone, false);
+  return mesh(new THREE.CylinderGeometry(.28, .28, .02, 16), std(0x222222, .5, .2, { transparent: true, opacity: .6 }), x, .1, z, drone, false);
+});
+const scanCone = new THREE.Mesh(new THREE.ConeGeometry(2.4, 5.2, 32, 1, true), new THREE.MeshBasicMaterial({ color: C.sprout, transparent: true, opacity: .12, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+scanCone.position.y = -2.7; drone.add(scanCone);
+const scanRing = new THREE.Mesh(new THREE.RingGeometry(2.1, 2.4, 40), new THREE.MeshBasicMaterial({ color: C.sprout, transparent: true, opacity: .5, depthWrite: false, side: THREE.DoubleSide }));
+scanRing.rotation.x = -Math.PI / 2; farm.add(scanRing);
+// workers
+const workers = [];
+{ const shirts = [0xC9A27E, 0x7DB8C9, 0xE8ECE2, 0xB7564A, 0x8FAE6A, 0xD9C28A];
+  for (let i = 0; i < 7; i++) {
+    const w = new THREE.Group(); w.position.set(3 + R() * 9, 0, 1 + R() * 8); w.rotation.y = R() * TAU;
+    mesh(new THREE.CylinderGeometry(.17, .22, .85, 8), std(shirts[i % shirts.length], .8), 0, .55, 0, w);
+    mesh(new THREE.SphereGeometry(.15, 12, 8), std(0x8A5A3C, .7), 0, 1.1, 0, w);
+    mesh(new THREE.ConeGeometry(.3, .16, 12), std(C.wheat, .8), 0, 1.25, 0, w);
+    farm.add(w); workers.push(w);
+  } }
+// soft contact shadows (grounds heavy objects visually)
+function shadowTex() {
+  const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gr.addColorStop(0, 'rgba(5,12,6,.55)'); gr.addColorStop(.7, 'rgba(5,12,6,.28)'); gr.addColorStop(1, 'rgba(5,12,6,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c);
+}
+const SHADOW_TEX = shadowTex();
+function contactShadow(parent, x, z, rx, rz, y) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(rx * 2, rz * 2), new THREE.MeshBasicMaterial({ map: SHADOW_TEX, transparent: true, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.position.set(x, y !== undefined ? y : .035, z); m.renderOrder = 1; parent.add(m); return m;
+}
+contactShadow(farm, -21, 3.5, 2.6, 2.6);       // pump house
+contactShadow(farm, 24, -16, 6.6, 8.4);        // barn
+contactShadow(farm, 32, -12, 2.9, 2.9);        // silo 1
+contactShadow(farm, 32, -19, 2.9, 2.9);        // silo 2
+contactShadow(farm, 13, -24, 3.1, 3.1);        // compost dome
+[[70, -11], [74.2, -11], [78.4, -11], [82.6, -11], [70, -15.5], [74.2, -15.5], [78.4, -15.5], [82.6, -15.5]].forEach(([x, z]) => contactShadow(farm, x, z + .3, 1.8, 1.5)); // market stalls
+contactShadow(tractor, -1.1, 0, 2.3, 1.35, .022);
+contactShadow(combines[0], .2, 0, 2.4, 1.7, .022); contactShadow(combines[1], .2, 0, 2.4, 1.7, .022);
+contactShadow(truck, .2, 0, 3.4, 1.5, .022);
+
+// ground clutter: scattered rocks, straw wisps and old tyre tracks for close-up realism
+{
+  const rockGeo = new THREE.DodecahedronGeometry(1, 0), rockMat = std(0x8A8478, .95, 0, { flatShading: true });
+  const rocks = new THREE.InstancedMesh(rockGeo, rockMat, LOW ? 40 : 110);
+  const strawGeo = (() => { const g = new THREE.CylinderGeometry(.012, .02, 1, 4); g.translate(0, .5, 0); return g; })();
+  const straw = new THREE.InstancedMesh(strawGeo, std(0xC9B064, .9), LOW ? 300 : 900);
+  const o = new THREE.Object3D(); let nr = 0, ns = 0;
+  const clutterSpots = [[-19.5, 12, 5], [24, -11, 5], [32, -12, 3], [32, -19, 3], [13, -24, 4], [20, -7, 6], [-21, 3.5, 3]];
+  clutterSpots.forEach(([cx, cz, rad]) => {
+    const nRocks = LOW ? 5 : 14, nStraw = LOW ? 40 : 120;
+    for (let i = 0; i < nRocks && nr < rocks.count; i++, nr++) {
+      const a = R() * TAU, d = R() * rad, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d, s = .06 + R() * .16;
+      o.position.set(x, s * .4, z); o.rotation.set(R() * TAU, R() * TAU, R() * TAU); o.scale.set(s, s * .7, s); o.updateMatrix(); rocks.setMatrixAt(nr, o.matrix);
+    }
+    for (let i = 0; i < nStraw && ns < straw.count; i++, ns++) {
+      const a = R() * TAU, d = R() * rad * 1.3, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d, len = .18 + R() * .3;
+      o.position.set(x, 0, z); o.rotation.set((R() - .5) * 1.2, R() * TAU, (R() - .5) * 1.2); o.scale.set(1, len, 1); o.updateMatrix(); straw.setMatrixAt(ns, o.matrix);
+    }
+  });
+  rocks.count = nr; straw.count = ns;
+  [rocks, straw].forEach(m => { m.frustumCulled = false; m.receiveShadow = !LOW; farm.add(m); });
+
+  // worn tyre-track ruts along the farm road and lane
+  const rutTex = (() => { const c = document.createElement('canvas'); c.width = 128; c.height = 128; const g = c.getContext('2d');
+    const grd = g.createLinearGradient(0, 0, 0, 128);
+    grd.addColorStop(0, 'rgba(20,15,10,0)'); grd.addColorStop(.5, 'rgba(20,15,10,.45)'); grd.addColorStop(1, 'rgba(20,15,10,0)');
+    g.fillStyle = grd; g.fillRect(20, 0, 18, 128); g.fillRect(90, 0, 18, 128);
+    const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping; return t; })();
+  rutTex.repeat.set(1, 20);
+  const ruts = new THREE.Mesh(new THREE.PlaneGeometry(5, 78), new THREE.MeshBasicMaterial({ map: rutTex, transparent: true, depthWrite: false }));
+  ruts.rotation.x = -Math.PI / 2; ruts.rotation.z = Math.PI / 2; ruts.position.set(59, .033, -4); farm.add(ruts);
+}
+
+// dust / pollen
+const DUST = LOW ? 350 : 900, dustGeo = new THREE.BufferGeometry(), dustPos = new Float32Array(DUST * 3), dustV = [];
+for (let i = 0; i < DUST; i++) { dustPos.set([(R() - .5) * 130, R() * 26, (R() - .5) * 100], i * 3); dustV.push(R() * TAU); }
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ size: .22, map: DOT, color: 0xF0D9A0, transparent: true, opacity: .5, depthWrite: false, blending: THREE.AdditiveBlending }));
+farm.add(dust);
+
+/* ---------- 13 domains: disconnected vs connected ---------- */
+const DOMAINS = ['Soil','Water','Crop','Labour','Machinery','Monitoring','Harvest','Storage','Logistics','Market','Profit','Waste','Sustainability'];
+const HUB = new THREE.Vector3(0, 12, 0);
+const net = new THREE.Group(); scene.add(net);
+const nodeGeo = new THREE.IcosahedronGeometry(1.25, 1);
+const greyC = new THREE.Color(0x7E7066), sproutC = new THREE.Color(C.sprout);
+const nodes = DOMAINS.map((name, i) => {
+  const a = i / DOMAINS.length * TAU - Math.PI / 2;
+  const home = new THREE.Vector3(Math.cos(a) * 20, 12, Math.sin(a) * 20).add(HUB).sub(new THREE.Vector3(0, 12, 0));
+  const scatter = home.clone().add(new THREE.Vector3((R() - .5) * 14, (R() - .5) * 9, (R() - .5) * 12));
+  const m = new THREE.Mesh(nodeGeo, new THREE.MeshStandardMaterial({ color: 0x7E7066, roughness: .35, metalness: .3, emissive: 0x7E7066, emissiveIntensity: .25, flatShading: true }));
+  net.add(m);
+  return { name, home, scatter, m, phase: R() * TAU };
+});
+const hub = new THREE.Group(); hub.position.copy(HUB); net.add(hub);
+mesh(new THREE.SphereGeometry(2.4, 32, 16), new THREE.MeshStandardMaterial({ color: C.sprout, emissive: C.sprout, emissiveIntensity: 1.1, roughness: .3 }), 0, 0, 0, hub, false);
+const hubRings = [4, 5.3].map((r, i) => { const t = new THREE.Mesh(new THREE.TorusGeometry(r, .05, 8, 96), new THREE.MeshBasicMaterial({ color: i ? C.wheat : C.mist, transparent: true, opacity: .7 })); hub.add(t); return t; });
+const hubHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: DOT, color: C.sprout, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .6 })); hubHalo.scale.set(16, 16, 1); hub.add(hubHalo);
+const hubLight = new THREE.PointLight(C.sprout, 0, 70); hubLight.position.copy(HUB); scene.add(hubLight);
+const linkGeo = new THREE.BufferGeometry(); linkGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(DOMAINS.length * 4 * 3), 3));
+const links = new THREE.LineSegments(linkGeo, new THREE.LineBasicMaterial({ color: C.sprout, transparent: true, opacity: 0, depthWrite: false })); net.add(links);
+const stubGeo = new THREE.BufferGeometry(); stubGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(DOMAINS.length * 2 * 3), 3));
+const stubs = new THREE.LineSegments(stubGeo, new THREE.LineBasicMaterial({ color: C.alarm, transparent: true, opacity: 0, depthWrite: false })); net.add(stubs);
+const pulseGeo = new THREE.BufferGeometry(); pulseGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(DOMAINS.length * 2 * 3), 3));
+const pulses = new THREE.Points(pulseGeo, new THREE.PointsMaterial({ size: 1.4, map: DOT, color: C.wheat, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); net.add(pulses);
+
+/* ---------- simulator test plots ---------- */
+const SIM_X = [-49, -40, -31], SIM_Z = 38, SIM_S = 7;
+const simU = SIM_X.map((cx, i) => {
+  plotGround(cx - SIM_S / 2, SIM_Z - SIM_S / 2, cx + SIM_S / 2, SIM_Z + SIM_S / 2);
+  const u = cropUniforms();
+  cropField([[cx - SIM_S / 2, SIM_Z - SIM_S / 2, cx + SIM_S / 2, SIM_Z + SIM_S / 2]], LOW ? .6 : .42, LOW ? .85 : .7, 1.6, u);
+  return u;
+});
+const tanks = SIM_X.map(cx => {
+  const g = new THREE.Group(); g.position.set(cx + SIM_S / 2 - .9, 0, SIM_Z - SIM_S / 2 - 1.6); scene.add(g);
+  mesh(new THREE.CylinderGeometry(.95, .95, 4.2, 24, 1, true), std(C.mist, .1, .1, { transparent: true, opacity: .16, side: THREE.DoubleSide, depthWrite: false }), 0, 2.1, 0, g, false);
+  const wg = new THREE.CylinderGeometry(.86, .86, 4, 24); wg.translate(0, 2, 0);
+  const water = mesh(wg, std(C.rain, .15, .2, { emissive: 0x1F4E5C, emissiveIntensity: .8, transparent: true, opacity: .85 }), 0, .1, 0, g, false);
+  mesh(new THREE.TorusGeometry(.95, .05, 6, 32), std(C.mist, .4, .5), 0, 4.2, 0, g, false).rotation.x = Math.PI / 2;
+  return water;
+});
+const simCur = SIM_X.map(() => ({ grow: 0, dry: 0, plant: 1, fill: 0 }));
+
+/* ---------- ecosystem network (final zoom-out) ---------- */
+const eco = new THREE.Group(); scene.add(eco);
+const ECO_COL = [C.sprout, C.wheat, C.rain, C.mist, C.clay];
+const EN = LOW ? 46 : 80;
+const ecoPts = [];
+for (let i = 0; i < EN; i++) { const r = 60 + Math.pow(R(), .75) * 190, a = R() * TAU, x = Math.cos(a) * r, z = Math.sin(a) * r * .8 - 10; ecoPts.push(new THREE.Vector3(x, hgt(x, z) + 2, z)); }
+const ecoNodes = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 14, 10), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 }), EN);
+const ecoBeams = new THREE.InstancedMesh((() => { const g = new THREE.CylinderGeometry(.18, .18, 1, 6, 1, true); g.translate(0, .5, 0); return g; })(), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }), EN);
+{ const o = new THREE.Object3D(), col = new THREE.Color();
+  ecoPts.forEach((p, i) => {
+    const s = 1.6 + R() * 1.8; o.position.copy(p); o.scale.setScalar(s); o.updateMatrix(); ecoNodes.setMatrixAt(i, o.matrix);
+    o.scale.set(1, 10 + R() * 26, 1); o.updateMatrix(); ecoBeams.setMatrixAt(i, o.matrix);
+    col.setHex(ECO_COL[i % 5]); ecoNodes.setColorAt(i, col); ecoBeams.setColorAt(i, col);
+  }); }
+[ecoNodes, ecoBeams].forEach(m => { m.frustumCulled = false; if (m.instanceColor) m.instanceColor.needsUpdate = true; eco.add(m); });
+const arcs = []; const arcPos = [];
+function arc(a, b) {
+  const mid = a.clone().add(b).multiplyScalar(.5); mid.y += a.distanceTo(b) * .28 + 6;
+  const curve = new THREE.QuadraticBezierCurve3(a, mid, b); arcs.push(curve);
+  const pts = curve.getPoints(28); for (let i = 0; i < pts.length - 1; i++) arcPos.push(pts[i].x, pts[i].y, pts[i].z, pts[i + 1].x, pts[i + 1].y, pts[i + 1].z);
+}
+const CENTER = new THREE.Vector3(0, 3, 5);
+ecoPts.forEach((p, i) => {
+  if (i % 3 === 0) arc(CENTER, p);
+  const near = ecoPts.map((q, j) => [q.distanceToSquared(p), j]).filter(([, j]) => j !== i).sort((x, y) => x[0] - y[0]);
+  if (i % 2 === 0) arc(p, ecoPts[near[0][1]]);
+  if (i % 5 === 0) arc(p, ecoPts[near[2][1]]);
+});
+const arcGeo = new THREE.BufferGeometry(); arcGeo.setAttribute('position', new THREE.Float32BufferAttribute(arcPos, 3));
+const arcLines = new THREE.LineSegments(arcGeo, new THREE.LineBasicMaterial({ color: C.mist, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); eco.add(arcLines);
+const EP = Math.min(arcs.length, LOW ? 50 : 110), ecoPulseGeo = new THREE.BufferGeometry(), ecoPulsePos = new Float32Array(EP * 3), ecoPulseSeed = [];
+for (let i = 0; i < EP; i++) ecoPulseSeed.push([(R() * arcs.length) | 0, R(), .08 + R() * .12]);
+ecoPulseGeo.setAttribute('position', new THREE.BufferAttribute(ecoPulsePos, 3));
+const ecoPulses = new THREE.Points(ecoPulseGeo, new THREE.PointsMaterial({ size: 5, map: DOT, color: C.wheat, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); eco.add(ecoPulses);
+const centerRing = new THREE.Mesh(new THREE.RingGeometry(34, 35.5, 96), new THREE.MeshBasicMaterial({ color: C.sprout, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+centerRing.rotation.x = -Math.PI / 2; centerRing.position.set(4, .3, 2); eco.add(centerRing);
+
+/* ---------- HTML labels anchored to 3D ---------- */
+const labelLayer = $('#labels'); const labels = [];
+function addLabel(html, getPos, getOp) { const el = document.createElement('div'); el.className = 'tag'; el.innerHTML = html; labelLayer.appendChild(el); labels.push({ el, getPos, getOp, last: -1 }); return el; }
+const S = {}, T = {};
+nodes.forEach(n => addLabel(n.name, () => n.m.position.clone().add(new THREE.Vector3(0, 2.3, 0)), () => S.nodes));
+const simLabels = SIM_X.map((cx, i) => addLabel(CROPS[i].name, () => new THREE.Vector3(cx, 6.2, SIM_Z - SIM_S / 2 - 1.6), () => S.sim));
+const V = new THREE.Vector3();
+function drawLabels() {
+  const w = innerWidth, h = innerHeight;
+  labels.forEach(L => {
+    const op = clamp(L.getOp() || 0, 0, 1);
+    if (op < .02) { if (L.last !== 0) { L.el.style.opacity = '0'; L.last = 0; } return; }
+    V.copy(L.getPos()).project(camera);
+    if (V.z > 1 || V.z < -1) { L.el.style.opacity = '0'; L.last = 0; return; }
+    L.el.style.transform = `translate3d(${((V.x * .5 + .5) * w).toFixed(1)}px, ${((-V.y * .5 + .5) * h).toFixed(1)}px, 0) translate(-50%, -100%)`;
+    L.el.style.opacity = op.toFixed(3); L.last = op;
+  });
+}
+
+/* ---------- image-based light from the sky + cinematic grade ---------- */
+try {
+  const pm = new THREE.PMREMGenerator(renderer), envScene = new THREE.Scene();
+  envScene.add(new THREE.Mesh(sky.geometry, sky.material));
+  sky.material.uniforms.uDay.value = 1;
+  scene.environment = pm.fromScene(envScene, 0, .1, 2000).texture; pm.dispose();
+} catch (e) { /* environment lighting is an enhancement */ }
+const envMats = []; { const seen = new Set(); scene.traverse(o => { const m = o.material; if (m && m.isMeshStandardMaterial && !seen.has(m)) { seen.add(m); envMats.push(m); } }); }
+let composer = null, gradePass = null;
+if (!LOW && THREE.EffectComposer && THREE.RenderPass && THREE.UnrealBloomPass && THREE.ShaderPass) {
+  try {
+    let rt;
+    if (renderer.capabilities.isWebGL2 && THREE.WebGLMultisampleRenderTarget) {
+      const pr = renderer.getPixelRatio();
+      rt = new THREE.WebGLMultisampleRenderTarget(innerWidth * pr, innerHeight * pr, { format: THREE.RGBAFormat });
+      rt.samples = 4;
+    }
+    composer = new THREE.EffectComposer(renderer, rt);
+    composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(innerWidth, innerHeight);
+    composer.addPass(new THREE.RenderPass(scene, camera));
+    composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), .16, .3, .96));
+    gradePass = new THREE.ShaderPass({
+      uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uDay: { value: 0 } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
+      fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime; uniform float uDay; varying vec2 vUv;
+        float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+        void main(){
+          vec3 c = texture2D(tDiffuse, vUv).rgb;
+          float l = dot(c, vec3(.299, .587, .114));
+          c = mix(c, c * vec3(.98, 1.04, .96), uDay * .6);
+          c += vec3(.0, .015, .0) * uDay * (1. - l);
+          c = mix(vec3(l), c, 1.16);
+          c = (c - .5) * 1.09 + .5;
+          float v = smoothstep(1.25, .45, length((vUv - .5) * vec2(1.25, 1.)));
+          c *= mix(.9, 1., v);
+          c += (h(vUv * vec2(1733., 977.) + uTime) - .5) * .012;
+          gl_FragColor = vec4(clamp(c, 0., 1.), 1.);
+        }`
+    });
+    composer.addPass(gradePass);
+  } catch (e) { composer = null; gradePass = null; }
+}
+if (!composer) document.body.classList.add('css-vig');
+
+/* =====================================================================
+   5. FRAME LOOP
+   ===================================================================== */
+computeTarget(T); Object.assign(S, T);
+let mx = 0, my = 0, pmx = 0, pmy = 0;
+if (!LOW) window.addEventListener('pointermove', e => { mx = e.clientX / innerWidth * 2 - 1; my = e.clientY / innerHeight * 2 - 1; }, { passive: true });
+const lookV = new THREE.Vector3(), camV = new THREE.Vector3(), tmp = new THREE.Vector3();
+let last = performance.now(), time = 0, first = true;
+
+function apply(dt) {
+  // camera
+  camV.set(S.cx, S.cy, S.cz); lookV.set(S.lx, S.ly, S.lz);
+  const dist = camV.distanceTo(lookV);
+  pmx += (mx - pmx) * .04; pmy += (my - pmy) * .04;
+  if (!reduce) { camV.x += pmx * dist * .025; camV.y -= pmy * dist * .015; }
+  camera.position.copy(camV); camera.lookAt(lookV);
+  const near = clamp(dist * .012, .03, 2.5);
+  if (Math.abs(camera.near - near) > .005) { camera.near = near; camera.updateProjectionMatrix(); }
+  sky.position.copy(camera.position);
+  scene.fog.density = S.fog;
+  const day = S.day;
+  sky.material.uniforms.uDay.value = day; sky.material.uniforms.uTime.value = time;
+  scene.fog.color.copy(fogNight).lerp(fogDay, day);
+  sun.intensity = mix(.9, 2.4, day); hemi.intensity = mix(.75, .98, day); fill.intensity = mix(.35, .48, day);
+  renderer.toneMappingExposure = mix(1.1, 1.22, day);
+  const envI = mix(.1, .75, day); envMats.forEach(m => m.envMapIntensity = envI);
+  const mistOp = day * (1 - smooth(40, 170, camera.position.y));
+  mists.forEach(m => { m.sp.material.opacity = m.base * mistOp; m.sp.visible = mistOp > .01; });
+  if (gradePass) { gradePass.uniforms.uDay.value = day; gradePass.uniforms.uTime.value = time % 10; }
+
+  // seed + roots + sprout
+  seed.position.set(seedPos.x, S.seedY, seedPos.z);
+  seed.rotation.y += dt * .5; seed.rotation.z = Math.sin(time * .8) * .12;
+  seedGlow.position.copy(seed.position); seedGlow.material.opacity = S.glow * (.55 + .12 * Math.sin(time * 2));
+  seedLight.position.copy(seed.position).add(tmp.set(.4, .4, .6)); seedLight.intensity = S.glow * 2.2;
+  seed.material.emissiveIntensity = .2 + S.glow * .5;
+  roots.forEach((r, i) => { const t = clamp(S.root * 1.25 - i * .03, 0, 1); r.geometry.setDrawRange(0, Math.floor(r.geometry.index.count * t / 6) * 6); r.visible = t > .01; });
+  stem.geometry.setDrawRange(0, Math.floor(stem.geometry.index.count * S.sprout / 6) * 6); stem.visible = S.sprout > .01;
+  leaves.forEach((l, i) => { const s = smooth(.55 + i * .08, 1, S.sprout) * (1 - i * .15); l.scale.setScalar(Math.max(.001, s)); l.visible = s > .01; l.rotation.z = .5 + Math.sin(time * 1.4 + i) * .06; });
+  const sp = sporeGeo.attributes.position.array;
+  sporeSeed.forEach(([r, a, b, s], i) => { const ang = a + time * s * .25; sp[i * 3] = seedPos.x + Math.cos(ang) * r; sp[i * 3 + 1] = S.seedY + b + Math.sin(time * s + a) * .15; sp[i * 3 + 2] = seedPos.z + Math.sin(ang) * r * .6 - .4; });
+  sporeGeo.attributes.position.needsUpdate = true; spores.material.opacity = S.glow * .9; spores.visible = S.glow > .01;
+
+  // crops
+  farmU.uGrow.value = S.crop; farmU.uRipe.value = S.ripe; farmU.uCut.value = S.harvest > .005 ? mix(-18, 31.5, S.harvest) : -1e4;
+
+  // farm objects
+  farm.visible = S.farm > .01;
+  if (farm.visible) {
+    { const U = tractor.userData, ph = (time % 30) / 30, leg = ph < .5 ? ph * 2 : (1 - ph) * 2, e = smooth(0, 1, leg);
+      const tx = mix(-12, 11, e), dx = tx - U.lastX; U.lastX = tx;
+      const targetYaw = ph < .5 ? 0 : Math.PI; U.yaw += (targetYaw - U.yaw) * Math.min(1, dt * 1.6);
+      tractor.position.set(tx, 0, 20.5); tractor.rotation.y = U.yaw;
+      U.w.forEach(w => w.rotation.z -= Math.abs(dx) / w.userData.r);
+      const on = smooth(.2, .9, S.tractor) * smooth(.002, .02, Math.abs(dx)); U.spray.material.opacity = .5 * on; U.spray.visible = on > .01;
+      if (U.spray.visible) { const a = U.spGeo.attributes.position.array;
+        U.spSeed.forEach(([z, o, k], i) => { const f = (o + time * (.8 + k * .5)) % 1; a[i * 3] = -1.8 - f * (.6 + k * .5); a[i * 3 + 1] = 1 - f * .95; a[i * 3 + 2] = z + Math.sin(time * 3 + i) * .05 * f; });
+        U.spGeo.attributes.position.needsUpdate = true; } }
+    const cx = mix(-19, 32, S.harvest);
+    combines[0].position.set(cx, 0, 4.5); combines[1].position.set(cx - 2, 0, 16.5);
+    combines.forEach(c => c.userData.w.forEach(w => w.rotation.z = -cx / .7));
+    const tk = mix(21, 74, S.truck); truck.position.set(tk, 0, -2.6); truck.userData.w.forEach(w => w.rotation.z = -tk / .48);
+    const dv = S.drone; drone.visible = scanRing.visible = dv > .02;
+    if (drone.visible) {
+      drone.scale.setScalar(dv);
+      const dx = -9 + Math.cos(time * .5) * 4.5, dz = 4.5 + Math.sin(time * .5) * 3.4;
+      drone.position.set(dx, 5.6 + Math.sin(time * 2) * .15, dz); drone.rotation.z = Math.cos(time * .5) * .08;
+      rotors.forEach(r => r.rotation.y += dt * 40);
+      scanRing.position.set(dx, .12, dz); scanRing.material.opacity = .55 * dv; scanCone.material.opacity = .12 * dv;
+    }
+    workers.forEach((w, i) => { w.visible = S.crop > .3; w.position.y = Math.abs(Math.sin(time * 2.2 + i)) * .05; });
+    pond.material.emissiveIntensity = .5 + Math.sin(time * 1.3) * .15;
+    const d = dustGeo.attributes.position.array;
+    if (!reduce) for (let i = 0; i < DUST; i++) { d[i * 3 + 1] += Math.sin(time * .6 + dustV[i]) * dt * .25; d[i * 3] += dt * .35; if (d[i * 3] > 65) d[i * 3] = -65; }
+    dustGeo.attributes.position.needsUpdate = true; dust.material.opacity = .45 * S.farm * (1 - S.eco);
+  }
+
+  // domain network
+  const nv = S.nodes; net.visible = nv > .01; hubLight.intensity = S.link * nv * 3;
+  if (net.visible) {
+    const L = linkGeo.attributes.position.array, St = stubGeo.attributes.position.array, P = pulseGeo.attributes.position.array;
+    nodes.forEach((n, i) => {
+      n.m.position.lerpVectors(n.scatter, n.home, ease(S.link));
+      n.m.position.y += Math.sin(time * 1.2 + n.phase) * .35 * (1 - S.link * .6);
+      n.m.scale.setScalar(Math.max(.001, nv));
+      n.m.rotation.y += dt * (.3 + (1 - S.link) * .4);
+      n.m.material.color.copy(greyC).lerp(sproutC, S.link); n.m.material.emissive.copy(greyC).lerp(sproutC, S.link);
+      n.m.material.emissiveIntensity = .2 + S.link * .5 + (1 - S.link) * .15 * Math.max(0, Math.sin(time * 5 + n.phase * 3));
+    });
+    nodes.forEach((n, i) => {
+      const a = n.m.position, b = nodes[(i + 1) % nodes.length].m.position;
+      L.set([HUB.x, HUB.y, HUB.z, a.x, a.y, a.z, a.x, a.y, a.z, b.x, b.y, b.z], i * 12);
+      tmp.copy(b).sub(a).multiplyScalar(.22).add(a); St.set([a.x, a.y, a.z, tmp.x, tmp.y, tmp.z], i * 6);
+      const t1 = (time * .45 + i * .137) % 1, t2 = (time * .3 + i * .29) % 1;
+      tmp.copy(HUB).lerp(a, t1); P.set([tmp.x, tmp.y, tmp.z], i * 6); tmp.copy(a).lerp(b, t2); P.set([tmp.x, tmp.y, tmp.z], i * 6 + 3);
+    });
+    linkGeo.attributes.position.needsUpdate = stubGeo.attributes.position.needsUpdate = pulseGeo.attributes.position.needsUpdate = true;
+    links.material.opacity = smooth(.15, 1, S.link) * nv * .75;
+    stubs.material.opacity = nv * (1 - S.link) * (.6 + .3 * Math.sin(time * 6));
+    pulses.material.opacity = smooth(.5, 1, S.link) * nv;
+    const hs = Math.max(.001, smooth(.1, 1, S.link) * nv); hub.scale.setScalar(hs); hub.visible = hs > .01;
+    hubRings[0].rotation.set(time * .4, time * .3, 0); hubRings[1].rotation.set(-time * .25, 0, time * .35);
+  }
+
+  // simulator plots
+  const res = simOut.results;
+  if (res) SIM_X.forEach((cx, i) => {
+    const r = res[i], c = simCur[i], k = reduce ? 1 : 1 - Math.exp(-dt * 4);
+    c.grow += ((.12 + .88 * r.yf) - c.grow) * k; c.dry += ((1 - r.r) - c.dry) * k;
+    c.plant += (r.plantedFrac - c.plant) * k; c.fill += (r.r - c.fill) * k;
+    simU[i].uGrow.value = S.sim * c.grow; simU[i].uDry.value = c.dry;
+    simU[i].uPlantMax.value = cx - SIM_S / 2 + SIM_S * c.plant + .01;
+    tanks[i].scale.y = Math.max(.01, c.fill);
+    const lt = `${r.name}<b>${inrShort(r.profit)}</b>`; if (simLabels[i]._t !== lt) { simLabels[i].innerHTML = lt; simLabels[i]._t = lt; }
+  });
+
+  // ecosystem
+  eco.visible = S.eco > .01;
+  if (eco.visible) {
+    const e = S.eco;
+    ecoNodes.material.opacity = e; ecoBeams.material.opacity = e * .22; arcLines.material.opacity = e * .22; ecoPulses.material.opacity = e; centerRing.material.opacity = e * .6;
+    const ep = ecoPulseGeo.attributes.position.array;
+    ecoPulseSeed.forEach((s, i) => { const t = (s[1] + time * s[2]) % 1; arcs[s[0]].getPoint(t, tmp); ep.set([tmp.x, tmp.y, tmp.z], i * 3); });
+    ecoPulseGeo.attributes.position.needsUpdate = true;
+  }
+}
+
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now; time += dt; uTime.value = time;
+  computeTarget(T);
+  const k = reduce ? 1 : 1 - Math.exp(-dt * 3.2);
+  for (const key in T) S[key] += (T[key] - S[key]) * k;
+  apply(dt);
+  if (composer) composer.render(); else renderer.render(scene, camera);
+  drawLabels();
+  if (first) { first = false; hideLoader(); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+let wasNarrow = innerWidth / innerHeight < 1;
+window.addEventListener('resize', () => {
+  renderer.setSize(innerWidth, innerHeight, false); if (composer) composer.setSize(innerWidth, innerHeight); setFov(); measure();
+  const n = innerWidth / innerHeight < 1; if (n !== wasNarrow) { wasNarrow = n; buildKeyframes(); }
+});
+window.addEventListener('load', measure);
+if (document.fonts) document.fonts.ready.then(() => { measure(); if (hasGSAP) ScrollTrigger.refresh(); });
+setTimeout(() => { if (first) hideLoader(); }, 6000);
+})();
+</script>
+</body>
+</html>
