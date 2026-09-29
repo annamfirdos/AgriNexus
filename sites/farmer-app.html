@@ -15,18 +15,18 @@
   --leaf:#B6E36B; --leaf-2:#8FCB45; --leaf-d:#1E4D22; --sun:#F2C66D; --sky:#9AD4EC; --bad:#FF9A8A; --ok:#B6E36B;
   /* tints used by crop, price and advisory icon circles (set from JS) */
   --leaf-l:rgba(182,227,107,.22); --sun-l:rgba(242,198,109,.24); --clay-l:rgba(232,150,110,.24); --sky-l:rgba(154,212,236,.22); --violet-l:rgba(190,168,255,.22); --bad-l:rgba(255,154,138,.2);
-  --glass:rgba(8,34,16,.42); --glass-2:rgba(8,34,16,.58);
+  --glass:rgba(10,32,17,.76); --glass-2:rgba(6,22,11,.88);
   --heading:'Instrument Serif',Georgia,serif; --text:'Barlow',system-ui,sans-serif;
   color-scheme:dark; box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --ink:#fff; } }
 :root[data-theme="dark"]{ --ink:#fff; }
 *,*::before,*::after{ box-sizing:inherit; }
-html{ scroll-padding-top:calc(70px + env(safe-area-inset-top,0px)); background:#2f5a1f; }
+html{ scroll-padding-top:calc(70px + env(safe-area-inset-top,0px)); background:#122814; }
 body{
   margin:0; color:var(--ink); font-family:var(--text); font-weight:400; font-size:1rem; line-height:1.55; -webkit-font-smoothing:antialiased;
   padding-bottom:calc(86px + env(safe-area-inset-bottom,0px));
-  background:linear-gradient(180deg,#9cc7d9 0%,#cfe0c4 22%,#6f9d3c 23%,#3f7426 55%,#24501a 100%) fixed;
+  background:#0e2412;
 }
 h1,h2,h3{ font-family:var(--heading); font-style:italic; font-weight:400; letter-spacing:-.02em; }
 .btn,.tab,.chip,.stat b,.brand,.seg button,.qa-toggle{ font-family:var(--text); }
@@ -39,12 +39,12 @@ button{ font:inherit; color:inherit; }
 /* ---------- live field background ---------- */
 #field{ position:fixed; inset:0; width:100%; height:100%; z-index:0; display:block; }
 .field-shade{ position:fixed; inset:0; z-index:1; pointer-events:none;
-  background:linear-gradient(180deg, rgba(6,26,12,.42) 0%, rgba(6,26,12,.16) 38%, rgba(6,26,12,.32) 100%); }
+  background:linear-gradient(180deg, rgba(6,20,10,.58) 0%, rgba(6,20,10,.22) 35%, rgba(4,14,7,.62) 100%); }
 
 /* ---------- liquid glass surfaces ---------- */
 .card,.hero,.pick,.crop-row,.qa-card,.admin-crop,.msg.bot,header.top .topbar,nav.tabs,.toast,.lock{
-  position:relative; background:var(--glass); -webkit-backdrop-filter:blur(18px) saturate(150%); backdrop-filter:blur(18px) saturate(150%);
-  box-shadow:inset 0 1px 1px rgba(255,255,255,.14), 0 18px 40px -22px rgba(0,0,0,.45); border:none;
+  position:relative; background:var(--glass); -webkit-backdrop-filter:blur(22px) saturate(160%); backdrop-filter:blur(22px) saturate(160%);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.18), 0 20px 45px -20px rgba(0,0,0,.6); border:1px solid rgba(255,255,255,.08);
 }
 .card::before,.hero::before,.pick::before,.crop-row::before,.qa-card::before,.admin-crop::before,.msg.bot::before,header.top .topbar::before,nav.tabs::before,.toast::before{
   content:""; position:absolute; inset:0; border-radius:inherit; padding:1.3px; pointer-events:none;
@@ -2513,10 +2513,40 @@ function farmContext() {
   if (lastDx) out.push(`Latest Crop Doctor photo check: ${lastDx.crop || 'crop'}, likely "${lastDx.issue}" (${lastDx.severity} severity, ${lastDx.confidence} confidence).`);
   return out.join(' ') || 'No farm details saved yet.';
 }
-function addMsg(role, text, imgUrl) { const el = document.createElement('div'); el.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
-  if (imgUrl) { const im = document.createElement('img'); im.className = 'shot'; im.src = imgUrl; el.appendChild(im); }
-  const t = document.createElement('span'); t.textContent = text || ''; el.appendChild(t);
-  $('#chatScroll').appendChild(el); $('#chatScroll').scrollTop = 1e9; return el; }
+function formatChatMarkdown(txt) {
+  if (!txt) return '';
+  let h = txt
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  // Bold
+  h = h.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Bullet points
+  h = h.replace(/^\s*[\*\-]\s+(.*)$/gm, '<li style="margin-left:1.2rem;margin-bottom:.25rem;">$1</li>');
+  // Numbered list
+  h = h.replace(/^\s*(\d+)\.\s+(.*)$/gm, '<li style="margin-left:1.2rem;margin-bottom:.25rem;"><strong>$1.</strong> $2</li>');
+  // Paragraphs / newlines
+  h = h.replace(/\n{2,}/g, '<div style="height:.6rem;"></div>');
+  h = h.replace(/\n/g, '<br>');
+  return h;
+}
+
+function addMsg(role, text, imgUrl) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
+  if (imgUrl) {
+    const im = document.createElement('img');
+    im.className = 'shot';
+    im.src = imgUrl;
+    el.appendChild(im);
+  }
+  const t = document.createElement('span');
+  t.innerHTML = formatChatMarkdown(text || '');
+  el.appendChild(t);
+  $('#chatScroll').appendChild(el);
+  $('#chatScroll').scrollTop = 1e9;
+  return el;
+}
 let pendingPhoto = null;
 $('#chatAttach').addEventListener('click', () => $('#chatPhoto').click());
 $('#diagnoseChip').addEventListener('click', () => $('#chatPhoto').click());
@@ -2545,15 +2575,20 @@ async function sendChat(q) {
         language: lang
       });
       thinking.classList.remove('thinking');
-      thinking.textContent = res.text;
+      const span = thinking.querySelector('span');
+      if (span) span.innerHTML = formatChatMarkdown(res.text);
+      else thinking.textContent = res.text;
       chatTurns.push({ role: 'assistant', content: res.text });
       $('#chatSend').disabled = false;
       return;
     } catch (e) {
       thinking.classList.remove('thinking');
-      thinking.textContent = (e && e.message && e.message.includes('API')) 
-        ? `⚠️ Gemini AI Notice: ${e.message}\n\nMake sure your GEMINI_API_KEY from Google AI Studio (starting with AIzaSy...) is saved in .env and the server is restarted.`
+      const errText = (e && e.message && e.message.includes('API')) 
+        ? `⚠️ Gemini AI Notice: ${e.message}\n\nMake sure your GEMINI_API_KEY from Google AI Studio is saved in .env and the server is restarted.`
         : localAnswer(q);
+      const span = thinking.querySelector('span');
+      if (span) span.innerHTML = formatChatMarkdown(errText);
+      else thinking.textContent = errText;
       $('#chatSend').disabled = false;
       return;
     }
@@ -3847,53 +3882,114 @@ enhanceChatChips();
   if (!canvas) return;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let gl = null;
-  try { gl = canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' }); } catch (e) {}
+  try { gl = canvas.getContext('webgl', { antialias: true, alpha: false, powerPreference: 'high-performance' }); } catch (e) {}
   if (!gl) { canvas.remove(); return; }
   const VS = 'attribute vec2 p; void main(){ gl_Position = vec4(p, 0., 1.); }';
-  const FS = `precision mediump float;
+  const FS = `precision highp float;
   uniform vec2 uRes; uniform float uTime;
-  float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-  float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
-    return mix(mix(hash(i), hash(i+vec2(1.,0.)), f.x), mix(hash(i+vec2(0.,1.)), hash(i+vec2(1.,1.)), f.x), f.y); }
-  float fbm(vec2 p){ float v = 0., a = .5; for (int i = 0; i < 4; i++){ v += a * noise(p); p = p * 2.03 + 7.7; a *= .5; } return v; }
+  
+  float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
+  float noise(vec2 p){
+    vec2 i = floor(p), f = fract(p);
+    f = f*f*(3.0 - 2.0*f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+  }
+  float fbm(vec2 p){
+    float v = 0.0, a = 0.5;
+    for(int i = 0; i < 5; i++){
+      v += a * noise(p);
+      p = p * 2.02 + vec2(4.1, 2.3);
+      a *= 0.5;
+    }
+    return v;
+  }
+
   void main(){
     vec2 uv = gl_FragCoord.xy / uRes;
     float asp = uRes.x / uRes.y;
-    float hz = .76;
-    vec3 col;
-    vec2 sunP = vec2(.78, .93);
-    float d = length((uv - sunP) * vec2(asp, 1.));
+    float hz = 0.73;
+    vec3 col = vec3(0.0);
+    
+    // Sun position
+    vec2 sunPos = vec2(0.74, 0.88);
+    vec2 sunVec = (uv - sunPos) * vec2(asp, 1.0);
+    float sunDist = length(sunVec);
+    
     if (uv.y > hz) {
-      float t = (uv.y - hz) / (1. - hz);
-      col = mix(vec3(.82,.9,.86), vec3(.42,.66,.86), pow(t, .7));
-      float cl = smoothstep(.5, .78, fbm(vec2(uv.x * asp * 2.2 + uTime * .01, t * 3.)));
-      col = mix(col, vec3(.97,.98,.96), cl * .7);
-      col += vec3(1., .93, .75) * (exp(-d * 9.) * .45 + exp(-d * 45.) * .6);
-      float hills = hz + .018 + .014 * sin(uv.x * 7. + 1.3) + .01 * sin(uv.x * 17.);
-      if (uv.y < hills) col = mix(vec3(.3,.46,.26), vec3(.52,.62,.46), smoothstep(hz, hills, uv.y));
-      float trees = hz + .006 + .012 * fbm(vec2(uv.x * 40., 1.));
-      if (uv.y < trees && fract(uv.x * 3.1 + .2) < .55) col = vec3(.16,.3,.14);
+      // Atmospheric Sky Model
+      float st = (uv.y - hz) / (1.0 - hz);
+      vec3 skyZenith = vec3(0.18, 0.44, 0.78);
+      vec3 skyHorizon = vec3(0.86, 0.78, 0.64);
+      vec3 skySunGlow = vec3(0.98, 0.84, 0.52);
+      
+      col = mix(skyHorizon, skyZenith, pow(st, 0.65));
+      col += skySunGlow * (exp(-sunDist * 5.5) * 0.5 + exp(-sunDist * 32.0) * 0.9);
+      
+      // Volumetric drifting clouds
+      vec2 cuv = vec2(uv.x * asp * 1.5 + uTime * 0.012, (st + 0.1) * 2.2);
+      float cDensity = fbm(cuv);
+      float cSoft = smoothstep(0.48, 0.82, cDensity);
+      vec3 cloudLit = vec3(1.0, 0.98, 0.94);
+      vec3 cloudDark = vec3(0.68, 0.74, 0.82);
+      vec3 cloudCol = mix(cloudDark, cloudLit, smoothstep(0.4, 0.75, fbm(cuv + vec2(0.05, 0.05))));
+      col = mix(col, cloudCol, cSoft * 0.75);
+      
+      // Distant rolling mountain ridges
+      float m1 = hz + 0.024 + 0.016 * sin(uv.x * 5.2 + 0.8) + 0.01 * sin(uv.x * 13.0);
+      if (uv.y < m1) {
+        vec3 ridgeCol = mix(vec3(0.24, 0.38, 0.34), vec3(0.55, 0.66, 0.62), smoothstep(hz, m1, uv.y));
+        col = mix(col, ridgeCol, 0.88);
+      }
+      
+      // Midground agricultural tree line / orchard
+      float trees = hz + 0.008 + 0.014 * fbm(vec2(uv.x * 32.0, 3.2));
+      if (uv.y < trees && fract(uv.x * 2.8 + 0.15) < 0.62) {
+        col = mix(col, vec3(0.12, 0.24, 0.11), 0.95);
+      }
     } else {
+      // Realistic Perspective Agricultural Field Ground Plane
       float yb = hz - uv.y;
-      float z = .16 / (yb + .004);
-      float xw = (uv.x - .5) * asp * z;
-      float wind = fbm(vec2(xw * .5, z * .6 - uTime * .28));
-      float fold = fract(floor(xw * .09 + .5) * .37);
-      float plot = step(.5, fract(xw * .045 + .25));
-      float rows = sin(xw * 16. + wind * 1.2);
-      float fade = clamp(1. - z * .045, 0., 1.);
-      float crop = mix(.62, smoothstep(-.55, .75, rows + wind * .8 - .05), fade);
-      vec3 soil = vec3(.36,.27,.15);
-      vec3 leafA = vec3(.3,.56,.14), leafB = vec3(.44,.66,.18), leafC = vec3(.62,.66,.24);
-      vec3 leaf = mix(leafA, leafB, plot);
-      leaf = mix(leaf, leafC, step(.82, fold) * .8);
-      leaf *= .72 + wind * .55;
-      col = mix(soil, leaf, crop);
-      col += vec3(1., .95, .75) * crop * pow(wind, 3.) * .25;
-      col = mix(col, vec3(.62,.74,.6), exp(-yb * 9.) * .85);
+      float z = 0.18 / (yb + 0.003);
+      float xw = (uv.x - 0.5) * asp * z;
+      
+      // Wind dynamics across lush crops
+      float wind = fbm(vec2(xw * 0.45 + uTime * 0.12, z * 0.5 - uTime * 0.22));
+      float cropRows = sin(xw * 18.0 + wind * 1.5);
+      float furrowRidge = cos(xw * 18.0);
+      
+      // Foliage & Soil Shading
+      float cropDensity = smoothstep(-0.6, 0.65, cropRows + wind * 0.7);
+      
+      // Deep Indian Agricultural Soil (Fertile Loam / Red Soil blend)
+      vec3 richSoil = mix(vec3(0.38, 0.24, 0.14), vec3(0.24, 0.16, 0.10), furrowRidge * 0.5 + 0.5);
+      
+      // Multi-tonal lush crop canopy (Paddy / Wheat / Gram)
+      vec3 canopyBase = vec3(0.20, 0.46, 0.14);
+      vec3 canopySunlit = vec3(0.48, 0.74, 0.22);
+      vec3 canopyGolden = vec3(0.72, 0.74, 0.28);
+      
+      float plotVariation = step(0.48, fract(xw * 0.038 + 0.2));
+      vec3 cropColor = mix(canopyBase, canopySunlit, plotVariation * 0.5 + 0.5);
+      cropColor = mix(cropColor, canopyGolden, step(0.78, fract(xw * 0.08 + 0.4)) * 0.6);
+      
+      // Wind specular reflection
+      cropColor *= 0.78 + wind * 0.45;
+      cropColor += vec3(0.95, 0.90, 0.65) * pow(max(0.0, wind), 3.5) * 0.35;
+      
+      col = mix(richSoil, cropColor, cropDensity);
+      
+      // Aerial perspective & distance haze towards the horizon
+      float mist = exp(-yb * 7.5);
+      vec3 horizonMist = vec3(0.58, 0.72, 0.56);
+      col = mix(col, horizonMist, mist * 0.82);
     }
-    vec2 v = uv - .5; col *= 1. - dot(v, v) * .55;
-    gl_FragColor = vec4(col, 1.);
+    
+    // Subtle cinematic vignette
+    vec2 v = uv - 0.5;
+    col *= 1.0 - dot(v, v) * 0.42;
+    
+    gl_FragColor = vec4(col, 1.0);
   }`;
   function sh(t, src) { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
   let prog;
@@ -3905,7 +4001,7 @@ enhanceChatChips();
   const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const uRes = gl.getUniformLocation(prog, 'uRes'), uTime = gl.getUniformLocation(prog, 'uTime');
   function resize() {
-    const scale = Math.min(devicePixelRatio || 1, 1.5) * .6;
+    const scale = Math.min(window.devicePixelRatio || 1, 2.0);
     canvas.width = Math.round(innerWidth * scale); canvas.height = Math.round(innerHeight * scale);
     gl.viewport(0, 0, canvas.width, canvas.height); draw(lastT);
   }
@@ -3914,7 +4010,7 @@ enhanceChatChips();
   addEventListener('resize', resize); resize();
   if (reduce) return;
   function loop(now) {
-    if (!document.hidden && now - prev > 33) { prev = now; lastT = now / 1000; draw(lastT); }
+    if (!document.hidden && now - prev > 28) { prev = now; lastT = now / 1000; draw(lastT); }
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);

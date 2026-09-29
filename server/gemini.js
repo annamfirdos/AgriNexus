@@ -12,20 +12,45 @@ try {
 const DEFAULT_MODEL = 'gemini-1.5-flash';
 
 // Enhanced Farm Advisor AI System Prompt (Challenge 1 & Platform Intelligence)
-const SYSTEM_AGRONOMIST_PROMPT = `You are the AgriNexus Farm Advisor AI, an expert digital agronomist and decision-support intelligence for Indian agriculture.
-You possess complete understanding of the AgriNexus agricultural platform data, features, and calculations:
-1. Multi-factor crop suitability algorithms (soil type matching, rainfall & irrigation adequacy, budget fit, market risk profiles).
-2. What-If Farm Simulations (testing moisture stress, fertilizer input variance, labor bottlenecks, market price shocks).
-3. Farm Resource Budgeting (multi-stage water allocation, N-P-K nutrient balancing, person-day labor constraints, machinery energy).
-4. Stage-by-stage crop lifecycle journeys and multimodal Crop Doctor diagnostics.
+const SYSTEM_AGRONOMIST_PROMPT = `You are the AgriNexus Farm Advisor AI, a friendly, authoritative digital agronomist and decision-support partner for Indian agriculture.
+You possess complete knowledge of the AgriNexus platform:
+1. Multi-factor crop suitability (soil type matching, rainfall & irrigation adequacy, budget fit, market risk profiles).
+2. What-If Farm Simulations (testing moisture stress, fertilizer variance, labor bottlenecks, price shocks).
+3. Farm Resource Budgeting (multi-stage water allocation, N-P-K nutrient balancing, labor constraints, machinery energy).
+4. Crop Doctor vision diagnostics and lifecycle management.
 
-Guidelines for your responses:
-- Ground all explanations in available project data (farm district, soil, water source, budget, active crop profiles, and active advisories).
-- Explain HOW specific factors affect the platform's recommendations (e.g., explaining why clay soil retains moisture better for paddy but creates root rot risk for groundnut during unseasonal rains).
-- Always explicitly communicate uncertainty and confidence levels when appropriate (e.g., distinguishing between well-established agronomic constants vs weather/market price volatility).
-- Make trade-offs visible (e.g., high yield variety vs higher water/fertilizer investment risk).
-- Keep responses clear, actionable, and structured with concise bullet points.
-- Never give exact toxic chemical or unverified pesticide dosages — advise consulting product labels or local Krishi Vigyan Kendra (KVK) officers.`;
+STRICT RESPONSE RULES:
+- ALWAYS talk directly to the farmer in the first person ("Hello! I am your AgriNexus Farm Advisor AI...").
+- NEVER output reasoning outlines, system analysis, planning notes, prompt breakdown tags, or meta-bullet points (such as "* User:", "* Role:", "* Identity:", "* Farm Profile Summary:", "* Call to Action:", or "(This matches...)").
+- When greeted with "Hi" or "Hello", give a warm, direct, personalized welcome summarizing their farm profile (acres, soil, water source, budget) and offering 3 quick concrete ways to help (Crop Selection, What-If Simulation, or Resource Budgeting).
+- Ground all advice in their specific farm context.
+- Explicitly state uncertainty and confidence bounds where appropriate.
+- Never recommend hazardous chemical doses or unverified pesticides; recommend consulting local KVK officers or official label directions.`;
+
+function cleanAiOutput(text) {
+  if (!text) return '';
+  let cleaned = text.trim();
+  // Strip <thought> or <reasoning> blocks if any
+  cleaned = cleaned.replace(/<thought>[\s\S]*?<\/thought>/gi, '').trim();
+  cleaned = cleaned.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '').trim();
+  
+  // If model outputted a planning scratchpad followed by the actual answer or meta notes
+  if (cleaned.includes('*   *Greeting:*') || cleaned.includes('*   *Capabilities:*')) {
+    const greetingMatch = cleaned.match(/\*\s+\*Greeting:\*\s*([\s\S]+)/);
+    if (greetingMatch && greetingMatch[1]) {
+      cleaned = greetingMatch[1]
+        .replace(/\*\s+\*Contextualization:\*\s*/gi, '\n\n')
+        .replace(/\*\s+\*Capabilities:\*\s*/gi, '\n\n**What I can do for your farm:**\n')
+        .replace(/\*\s+\*Call to Action:\*\s*/gi, '\n\n**How would you like to start?**\n')
+        .replace(/\(This matches[\s\S]*?\)$/gi, '')
+        .trim();
+    }
+  }
+
+  // Remove any trailing evaluation notes like "(This matches the provided good response)."
+  cleaned = cleaned.replace(/\(This matches[\s\S]*?\)$/gi, '').trim();
+  return cleaned;
+}
 
 function getApiKey() {
   if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim()) {
@@ -192,7 +217,8 @@ module.exports = {
     });
 
     try {
-      const text = await callGeminiRest({ contents, systemInstruction, temperature: 0.7 });
+      const rawText = await callGeminiRest({ contents, systemInstruction, temperature: 0.7 });
+      const text = cleanAiOutput(rawText);
       return { text, offline: false };
     } catch (err) {
       console.error('Gemini Chat Error:', err);
